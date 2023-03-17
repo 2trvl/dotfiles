@@ -25,8 +25,8 @@ from typing import IO, Iterator
 
 import charset_normalizer
 
-from common import run_as_admin
-from widgets import ProgressBar, clear_terminal
+from core.common import run_as_admin
+from core.widgets import ProgressBar, clear_terminal
 
 
 class ArchiveFile():

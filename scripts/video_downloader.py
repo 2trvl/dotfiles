@@ -18,7 +18,7 @@ import os
 
 import yt_dlp
 
-from widgets import show_menu
+from core.widgets import show_menu
 
 parser = argparse.ArgumentParser(
     description="Video Downloader",

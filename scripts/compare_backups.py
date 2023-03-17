@@ -22,8 +22,8 @@ from itertools import filterfalse
 from typing import IO
 
 from archiver import ZipFile
-from common import run_as_admin
-from widgets import ProgressBar
+from core.common import run_as_admin
+from core.widgets import ProgressBar
 
 if os.name == "nt":
     import ctypes

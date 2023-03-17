@@ -24,8 +24,8 @@ from urllib.request import urlretrieve
 import pyexiv2
 import vk_api
 
-from common import charsForbidden
-from widgets import show_menu
+from core.common import charsForbidden
+from core.widgets import show_menu
 
 parser = argparse.ArgumentParser(description="Vk Album Downloader")
 parser.add_argument(
