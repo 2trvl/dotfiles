@@ -55,10 +55,10 @@ class ArchiveFile():
             self.unit.value = b"files"
             self.finished = multiprocessing.Value("b", False)
             self._create_progressbar("__init__")
-        
+
         self.useBarPrefix = useBarPrefix
         self.clearBarAfterFinished = clearBarAfterFinished
-    
+
     def _create_progressbar(self, ownerName: str):
         '''
         Create progress bar
@@ -88,7 +88,7 @@ class ArchiveFile():
 
         Args:
             callerName (str): Caller name, compared
-            with progress bar owner's name
+                with progress bar owner's name
         '''
         if self._progressbarOwner != callerName:
             return
@@ -112,7 +112,7 @@ class ArchiveFile():
 
         Args:
             callerName (str): Caller name, compared
-            with progress bar owner's name
+                with progress bar owner's name
         '''
         if self._progressbarOwner != callerName:
             return
@@ -124,7 +124,7 @@ class ArchiveFile():
             if self.clearBarAfterFinished:
                 clear_terminal(1)
             self._reset_progressbar()
-    
+
     def is_ignored(self, path: str) -> bool:
         '''
         Check if file is being ignored according to the ignore parameter
@@ -140,7 +140,7 @@ class ArchiveFile():
 
         if frozenset(path.split("/")).intersection(self.ignore):
             return True
-        
+
         return False
 
     def guess_encoding(self, binaryText: bytes) -> tuple[str, str]:
@@ -177,19 +177,22 @@ class ArchiveFile():
                 else:
                     #  First attempt can't decode with last
                     #  Use preferred filename encoding
-                    if attempt == 0 and self.latestCharset != self.preferredEncoding:
+                    if (
+                        attempt == 0
+                        and self.latestCharset != self.preferredEncoding
+                    ):
                         self.latestCharset = self.preferredEncoding
                     #  Second attempt can't decode with preferred
                     #  Try to guess
                     else:
                         self.latestCharset = None
-        
+
         return encoding, text
 
     def decode_filename(self, filename: bytes) -> str:
         '''
         Decodes a filename, splitting it into parts.
-        This is necessary in order to reduce the number 
+        This is necessary in order to reduce the number
         of charset_normalizer errors
 
         Args:
@@ -202,14 +205,14 @@ class ArchiveFile():
         for filename in filename.split(b"/"):
             filename = self.guess_encoding(filename)[1]
             filenames.append(filename)
-        
+
         filename = "/".join(filenames)
         return filename
 
     def get_unique_filename(self, filename: str) -> Iterator[str]:
         '''
         Unique name generator: adds a number to the filename
-        
+
         Used to rename duplicates if the overwriteDuplicates
         parameter is disabled
 
@@ -221,35 +224,34 @@ class ArchiveFile():
         '''
         filename, extension = os.path.splitext(filename)
         number = itertools.count(1)
-        
+
         while True:
             yield f"{filename} ({next(number)}){extension}"
 
 
 class ZipFile(zipfile.ZipFile, ArchiveFile):
-
     def __init__(
         self,
         file: str | IO,
-        mode: str="r",
-        compression: int=zipfile.ZIP_STORED,
-        allowZip64: bool=True,
-        compresslevel: int | None=None,
+        mode: str = "r",
+        compression: int = zipfile.ZIP_STORED,
+        allowZip64: bool = True,
+        compresslevel: int | None = None,
         *,
-        strict_timestamps: bool=True,
-        preferredEncoding: str="cp866",
-        ignore: list[str]=[],
-        overwriteDuplicates: bool=False,
-        symlinksToFiles: bool=False,
-        progressbar: bool=False,
-        useBarPrefix: bool=True,
-        clearBarAfterFinished: bool=False
+        strict_timestamps: bool = True,
+        preferredEncoding: str = "cp866",
+        ignore: list[str] = [],
+        overwriteDuplicates: bool = False,
+        symlinksToFiles: bool = False,
+        progressbar: bool = False,
+        useBarPrefix: bool = True,
+        clearBarAfterFinished: bool = False
     ):
         '''
         Better ZipFile with proper names and symlinks encoding & progressbar
 
         Args:
-            file (str | IO): Either the path to the file, 
+            file (str | IO): Either the path to the file,
                 or a file-like object
             mode (str, optional): File mode. Defaults to "r".
             compression (int, optional): ZIP_STORED (no compression),
@@ -297,7 +299,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             useBarPrefix=useBarPrefix,
             clearBarAfterFinished=clearBarAfterFinished
         )
-        
+
         super().__init__(
             file=file,
             mode=mode,
@@ -315,7 +317,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
 
     def __exit__(self, type, value, traceback):
         self.close()
-        
+
         #  Delete archive if empty
         if self.filelist:
             return
@@ -327,10 +329,10 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             self.unit.value = b""
             self._create_progressbar("__exit__")
             self._start_progressbar()
-        
+
         os.remove(self.filename)
         self._finish_progressbar("__exit__")
-    
+
     def _RealGetContents(self):
         '''
         Read in the table of contents for the ZIP file.
@@ -352,7 +354,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         concat = endrec[zipfile._ECD_LOCATION] - size_cd - offset_cd
         if endrec[zipfile._ECD_SIGNATURE] == zipfile.stringEndArchive64:
             # If Zip64 extension structures are present, account for them
-            concat -= (zipfile.sizeEndCentDir64 + zipfile.sizeEndCentDir64Locator)
+            concat -= zipfile.sizeEndCentDir64 + zipfile.sizeEndCentDir64Locator
 
         if self.debug > 2:
             inferred = concat + offset_cd
@@ -369,7 +371,9 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 raise zipfile.BadZipFile("Truncated central directory")
             centdir = zipfile.struct.unpack(zipfile.structCentralDir, centdir)
             if centdir[zipfile._CD_SIGNATURE] != zipfile.stringCentralDir:
-                raise zipfile.BadZipFile("Bad magic number for central directory")
+                raise zipfile.BadZipFile(
+                    "Bad magic number for central directory"
+                )
             if self.debug > 2:
                 print(centdir)
             filename = fp.read(centdir[zipfile._CD_FILENAME_LENGTH])
@@ -378,26 +382,43 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 # UTF-8 file names extension
                 filename = filename.decode('utf-8')
             else:
-                #------------------------------------------------------
-                #    Fix broken filenames due to incorrect encoding    
-                #------------------------------------------------------
+                # ----------------------------------------------------
+                #    Fix broken filenames due to incorrect encoding
+                # ----------------------------------------------------
                 filename = self.decode_filename(filename)
             # Create ZipInfo instance to store file information
             x = zipfile.ZipInfo(filename)
             x.extra = fp.read(centdir[zipfile._CD_EXTRA_FIELD_LENGTH])
             x.comment = fp.read(centdir[zipfile._CD_COMMENT_LENGTH])
             x.header_offset = centdir[zipfile._CD_LOCAL_HEADER_OFFSET]
-            (x.create_version, x.create_system, x.extract_version, x.reserved,
-             x.flag_bits, x.compress_type, t, d,
-             x.CRC, x.compress_size, x.file_size) = centdir[1:12]
+            (
+                x.create_version,
+                x.create_system,
+                x.extract_version,
+                x.reserved,
+                x.flag_bits,
+                x.compress_type,
+                t,
+                d,
+                x.CRC,
+                x.compress_size,
+                x.file_size
+            ) = centdir[1:12]
             if x.extract_version > zipfile.MAX_EXTRACT_VERSION:
-                raise NotImplementedError("zip file version %.1f" %
-                                          (x.extract_version / 10))
+                raise NotImplementedError(
+                    "zip file version %.1f" % (x.extract_version / 10)
+                )
             x.volume, x.internal_attr, x.external_attr = centdir[15:18]
             # Convert date/time code to (year, month, day, hour, min, sec)
             x._raw_time = t
-            x.date_time = ( (d>>9)+1980, (d>>5)&0xF, d&0x1F,
-                            t>>11, (t>>5)&0x3F, (t&0x1F) * 2 )
+            x.date_time = (
+                (d >> 9) + 1980,
+                (d >> 5) & 0xF,
+                d & 0x1F,
+                t >> 11,
+                (t >> 5) & 0x3F,
+                (t & 0x1F) * 2
+            )
 
             x._decodeExtra()
             x.header_offset = x.header_offset + concat
@@ -405,13 +426,17 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             self.NameToInfo[x.filename] = x
 
             # update total bytes read from central directory
-            total = (total + zipfile.sizeCentralDir + centdir[zipfile._CD_FILENAME_LENGTH]
-                     + centdir[zipfile._CD_EXTRA_FIELD_LENGTH]
-                     + centdir[zipfile._CD_COMMENT_LENGTH])
+            total = (
+                total
+                + zipfile.sizeCentralDir
+                + centdir[zipfile._CD_FILENAME_LENGTH]
+                + centdir[zipfile._CD_EXTRA_FIELD_LENGTH]
+                + centdir[zipfile._CD_COMMENT_LENGTH]
+            )
 
             if self.debug > 2:
                 print("total", total)
-    
+
     def open(self, name, mode="r", pwd=None, *, force_zip64=False):
         '''
         Return file-like object for 'name'.
@@ -437,7 +462,8 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             raise ValueError("pwd is only supported for reading files")
         if not self.fp:
             raise ValueError(
-                "Attempt to use ZIP archive that was already closed")
+                "Attempt to use ZIP archive that was already closed"
+            )
 
         # Make sure we have an info object
         if isinstance(name, zipfile.ZipInfo):
@@ -455,9 +481,11 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             return self._open_to_write(zinfo, force_zip64=force_zip64)
 
         if self._writing:
-            raise ValueError("Can't read from the ZIP file while there "
-                    "is an open writing handle on it. "
-                    "Close the writing handle before trying to read.")
+            raise ValueError(
+                "Can't read from the ZIP file while there "
+                "is an open writing handle on it. "
+                "Close the writing handle before trying to read."
+            )
 
         # Open for reading:
         self._fileRefCnt += 1
@@ -484,7 +512,9 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
 
             if zinfo.flag_bits & 0x20:
                 # Zip 2.7: compressed patched data
-                raise NotImplementedError("compressed patched data (flag bit 5)")
+                raise NotImplementedError(
+                    "compressed patched data (flag bit 5)"
+                )
 
             if zinfo.flag_bits & 0x40:
                 # strong encryption
@@ -494,15 +524,16 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 # UTF-8 filename
                 fname_str = fname.decode("utf-8")
             else:
-                #------------------------------------------------------
-                #    Fix broken filenames due to incorrect encoding    
-                #------------------------------------------------------
+                # ----------------------------------------------------
+                #    Fix broken filenames due to incorrect encoding
+                # ----------------------------------------------------
                 fname_str = self.decode_filename(fname)
 
             if fname_str != zinfo.orig_filename:
                 raise zipfile.BadZipFile(
                     'File name in directory %r and header %r differ.'
-                    % (zinfo.orig_filename, fname))
+                    % (zinfo.orig_filename, fname)
+                )
 
             # check for encrypted flag & handle password
             is_encrypted = zinfo.flag_bits & 0x1
@@ -510,8 +541,10 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 if not pwd:
                     pwd = self.pwd
                 if not pwd:
-                    raise RuntimeError("File %r is encrypted, password "
-                                       "required for extraction" % name)
+                    raise RuntimeError(
+                        "File %r is encrypted, password "
+                        "required for extraction" % name
+                    )
             else:
                 pwd = None
 
@@ -519,7 +552,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         except:
             zef_file.close()
             raise
-    
+
     def extract(self, member, path=None, pwd=None) -> str:
         '''
         Extract a member from the archive to the current working directory,
@@ -551,7 +584,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         targetpath = self._extract_member(member, path, pwd, "extract")
         #  extract directory contents
         if targetpath != path and os.path.isdir(targetpath):
-            members = [ name for name in self.namelist() if member in name ][1:]
+            members = [name for name in self.namelist() if member in name][1:]
             self.extractall(path, members)
 
         self._finish_progressbar("extract")
@@ -570,7 +603,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 self.prefix.value = f"Extracting \"{self.arcname}\" : ".encode()
             self._create_progressbar("extractall")
             self._start_progressbar()
-        
+
         if members is None:
             members = self.namelist()
 
@@ -591,7 +624,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             #  name was found in ignore, add path to skip
             if targetpath == path:
                 skip = zipinfo
-        
+
         self._finish_progressbar("extractall")
 
     def _extract_member(self, member, targetpath, pwd, callerName="") -> str:
@@ -601,7 +634,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         '''
         if not isinstance(member, zipfile.ZipInfo):
             member = self.getinfo(member)
-        
+
         arcname = member.filename
 
         #  Symlinks real name handling
@@ -615,10 +648,10 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             arcname = f"{arcname}/{filename}"
         else:
             symlink = None
-        
+
         if self.is_ignored(arcname):
             return targetpath
-        
+
         #  Original _extract_member() code
 
         # build the destination pathname, replacing
@@ -631,15 +664,16 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         # UNC path, redundant separators, "." and ".." components.
         arcname = os.path.splitdrive(arcname)[1]
         invalid_path_parts = ('', os.path.curdir, os.path.pardir)
-        arcname = os.path.sep.join(x for x in arcname.split(os.path.sep)
-                                   if x not in invalid_path_parts)
+        arcname = os.path.sep.join(
+            x for x in arcname.split(os.path.sep) if x not in invalid_path_parts
+        )
         if os.path.sep == '\\':
             # filter illegal characters on Windows
             arcname = self._sanitize_windows_name(arcname, os.path.sep)
 
         targetpath = os.path.join(targetpath, arcname)
         targetpath = os.path.normpath(targetpath)
-        
+
         #  Deal with duplicates
         if os.path.exists(targetpath):
             if self.overwriteDuplicates:
@@ -673,17 +707,13 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             with self.open(member, pwd=pwd) as source, \
                 open(targetpath, "wb") as target:
                 shutil.copyfileobj(source, target)
-        
+
         self._update_progressbar(callerName)
-        
+
         return targetpath
 
     def write(
-        self,
-        filename,
-        arcname=None,
-        compress_type=None,
-        compresslevel=None
+        self, filename, arcname=None, compress_type=None, compresslevel=None
     ):
         '''
         Better zipfile.write which supports writing
@@ -710,18 +740,12 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 self.unit.value = b""
             self._create_progressbar("write")
             self._start_progressbar()
-        
+
         self._write(filename, arcname, compress_type, compresslevel)
 
         self._finish_progressbar("write")
 
-    def _write(
-        self,
-        filename,
-        arcname,
-        compress_type=None,
-        compresslevel=None
-    ):
+    def _write(self, filename, arcname, compress_type=None, compresslevel=None):
         '''
         Real zipfile.write, recursive
         '''
@@ -754,7 +778,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 #  generate new arcname
                 arcname = os.path.dirname(arcname)
                 arcname = f"{arcname}/__symlink__{hashlib.md5(symlink.encode()).hexdigest()}"
-        
+
         #  Check for dir trailing slash
         if os.path.isdir(filename) and symlink is None:
             if not arcname.endswith("/"):
@@ -784,16 +808,20 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         if not arcname.endswith("/"):
             if create:
                 if symlink is None:
-                    super().write(filename, arcname, compress_type, compresslevel)
+                    super().write(
+                        filename, arcname, compress_type, compresslevel
+                    )
                 else:
-                    super().writestr(arcname, symlink, compress_type, compresslevel)
+                    super().writestr(
+                        arcname, symlink, compress_type, compresslevel
+                    )
 
             self._update_progressbar("write")
-        
+
         else:
             if create:
                 super().write(filename, arcname, compress_type, compresslevel)
-            
+
             for file in sorted(os.listdir(filename)):
                 self._write(
                     filename=os.path.join(filename, file),
@@ -801,12 +829,14 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                     compress_type=compress_type,
                     compresslevel=compresslevel
                 )
-    
-    def remove(self, member: zipfile.ZipInfo | str, pwd: bytes | None=None) -> bool:
+
+    def remove(
+        self, member: zipfile.ZipInfo | str, pwd: bytes | None = None
+    ) -> bool:
         '''
         Remove a file or folder from the archive.
         The archive must be open with mode 'a'
-        
+
         CPython commit 659eb048cc9cac73c46349eb29845bc5cd630f09
 
         Args:
@@ -826,7 +856,8 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             raise RuntimeError("remove() requires mode 'a'")
         if not self.fp:
             raise ValueError(
-                "Attempt to write to ZIP archive that was already closed")
+                "Attempt to write to ZIP archive that was already closed"
+            )
         if self._writing:
             raise ValueError(
                 "Can't write to ZIP archive while an open writing handle exists."
@@ -853,7 +884,9 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         removed = True
 
         if member.is_dir():
-            names = [ name for name in self.namelist() if member.filename in name ]
+            names = [
+                name for name in self.namelist() if member.filename in name
+            ]
             #  inverse to remove members from subdirectories first
             dirs = []
             files = []
@@ -878,7 +911,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 removed &= removedFile
             #  clean up empty subdirs
             for subdir in dirs:
-                files = [ file for file in names if subdir in file ]
+                files = [file for file in names if subdir in file]
                 if not files:
                     subdir = self.getinfo(subdir)
                     self._remove_member(subdir, pwd)
@@ -888,7 +921,9 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         self._finish_progressbar("remove")
         return removed
 
-    def _remove_member(self, member: zipfile.ZipInfo, pwd: bytes | None=None) -> bool:
+    def _remove_member(
+        self, member: zipfile.ZipInfo, pwd: bytes | None = None
+    ) -> bool:
         '''
         Remove member from archive
 
@@ -908,7 +943,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 filename = symlink.split(",")[0]
             arcname = os.path.dirname(arcname)
             arcname = f"{arcname}/{filename}"
-        
+
         if self.is_ignored(arcname):
             return False
 
@@ -959,7 +994,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
 
         if not member.is_dir():
             self._update_progressbar("remove")
-        
+
         return True
 
 
@@ -1052,7 +1087,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.write or os.path.exists(args.filepath):
-
         with ZipFile(
             file=args.filepath,
             mode="a",
@@ -1063,19 +1097,15 @@ if __name__ == "__main__":
             progressbar=True,
             clearBarAfterFinished=args.verbose
         ) as zip:
-
             if args.extract:
                 # on windows users need "create symbolic links" rights
                 # to create a symlink. by default, normal users don't have it
                 # but administrator does
                 if os.name == "nt":
                     run_as_admin()
-                
+
                 if "/" in args.extract:
-                    zip.extractall(
-                        path=args.destination,
-                        pwd=args.password
-                    )
+                    zip.extractall(path=args.destination, pwd=args.password)
                 else:
                     members = zip.namelist()
                     for member in args.extract:
@@ -1086,7 +1116,9 @@ if __name__ == "__main__":
                                 pwd=args.password
                             )
                         else:
-                            print(f"extract: There is no member named \"{member}\"")
+                            print(
+                                f"extract: There is no member named \"{member}\""
+                            )
 
             if args.write:
                 if "/" in args.write:
@@ -1107,7 +1139,9 @@ if __name__ == "__main__":
                         if member in members:
                             zip.remove(member, args.password)
                         else:
-                            print(f"remove: There is no member named \"{member}\"")
+                            print(
+                                f"remove: There is no member named \"{member}\""
+                            )
 
             if args.list:
                 zip.printdir()
@@ -1115,8 +1149,10 @@ if __name__ == "__main__":
             if args.test:
                 badfile = zip.testzip()
                 if badfile:
-                    print("The following enclosed file is corrupted: {!r}".format(badfile))
+                    print(
+                        "The following enclosed file is corrupted: {!r}".format(badfile)
+                    )
                 print("Done testing")
-    
+
     else:
         print(f"open: File \"{args.filepath}\" doesn't exist")

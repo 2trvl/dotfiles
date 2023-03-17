@@ -13,6 +13,7 @@ particular and is used in several scripts
 import functools
 import platform
 
+
 @functools.cache
 def WINDOWS_VT_MODE() -> bool:
     '''
@@ -35,41 +36,38 @@ def WINDOWS_VT_MODE() -> bool:
 
         if version < (10, 0, 10586):
             return True
-        
+
         import ctypes
-        
+
         STD_OUTPUT_HANDLE = -11
         INVALID_HANDLE_VALUE = -1
         hConsoleOutput = ctypes.windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
         if hConsoleOutput == INVALID_HANDLE_VALUE:
             return True
-        
+
         dwMode = ctypes.c_ulong(0)
         if not ctypes.windll.kernel32.GetConsoleMode(
-            hConsoleOutput,
-            ctypes.byref(dwMode)
-        ): return True
+            hConsoleOutput, ctypes.byref(dwMode)
+        ):
+            return True
 
         ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
 
-        # check if vt processing is already enabled
+        #  Check if vt processing is already enabled
         if dwMode.value & ENABLE_VIRTUAL_TERMINAL_PROCESSING:
             return False
-        
+
         dwMode.value |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
         if not ctypes.windll.kernel32.SetConsoleMode(
-            hConsoleOutput,
-            dwMode.value
-        ): return True
+            hConsoleOutput, dwMode.value
+        ):
+            return True
 
         import atexit
 
         def disable_vt_processing():
             dwMode.value &= ~ENABLE_VIRTUAL_TERMINAL_PROCESSING
-            ctypes.windll.kernel32.SetConsoleMode(
-                hConsoleOutput,
-                dwMode.value
-            )
+            ctypes.windll.kernel32.SetConsoleMode(hConsoleOutput, dwMode.value)
 
         atexit.register(disable_vt_processing)
 
@@ -88,7 +86,7 @@ def run_as_admin():
     else:
         import ctypes
         isAdmin = ctypes.windll.shell32.IsUserAnAdmin() == True
-    
+
     if not isAdmin:
         import sys
         sys.exit(126)

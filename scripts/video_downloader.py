@@ -42,14 +42,19 @@ parser.add_argument(
 )
 args, ytDlpArgs = parser.parse_known_args()
 
-ytDlpArgs.extend([
-    "--quiet",
-    "--no-colors",
-    "--ignore-errors",
-    "--format-sort", "filesize",
-    "--recode-video", "avi>mp4/flv>mp4/mkv>mp4/mov>mp4/webm>mp4",
-    "--output", "%(title)s [%(id)s] [%(height,format_note)s].%(ext)s"
-])
+ytDlpArgs.extend(
+    [
+        "--quiet",
+        "--no-colors",
+        "--ignore-errors",
+        "--format-sort",
+        "filesize",
+        "--recode-video",
+        "avi>mp4/flv>mp4/mkv>mp4/mov>mp4/webm>mp4",
+        "--output",
+        "%(title)s [%(id)s] [%(height,format_note)s].%(ext)s"
+    ]
+)
 
 ydlOpts = yt_dlp.parse_options(ytDlpArgs)[-1]
 
@@ -57,24 +62,23 @@ with yt_dlp.YoutubeDL(ydlOpts) as ydl:
     videoInfo = ydl.extract_info(args.url, download=False)
 
     sources = {}
-    
+
     for source in videoInfo["formats"][::-1]:
         sourceFormatted = str(source["format_id"])
-        
+
         #  YouTube specific
         if "asr" in source and source["asr"] is None and args.video_with_sound:
             sourceFormatted += "+ba"
 
-        sources["[ {} ] [ {} ] [ {} ]".format(
-            source["format"].split(" - ")[1],
-            source["ext"],
-            yt_dlp.utils.format_bytes(source.get("filesize", None))
-        )] = sourceFormatted
+        sources[
+            "[ {} ] [ {} ] [ {} ]".format(
+                source["format"].split(" - ")[1],
+                source["ext"],
+                yt_dlp.utils.format_bytes(source.get("filesize", None))
+            )
+        ] = sourceFormatted
 
-    indexes = show_menu(
-        "Choose sources to download",
-        sources.keys()
-    )
+    indexes = show_menu("Choose sources to download", sources.keys())
     sources = list(sources.values())
 
     ydl.params["format"] = ",".join([sources[index] for index in indexes])

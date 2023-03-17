@@ -30,14 +30,13 @@ if os.name == "nt":
 
 
 class DirCmpUtils():
-    
     @staticmethod
     def parse_dirs(
         files: list[str],
         rootPath: str,
-        dirs: dict=None,
-        dirsFiles: dict=None,
-        recursive: bool=True,
+        dirs: dict = None,
+        dirsFiles: dict = None,
+        recursive: bool = True,
         basePath: str = ""
     ):
         '''
@@ -50,11 +49,11 @@ class DirCmpUtils():
         Args:
             files (list[str]): Folder files
             rootPath (str): Folder path
-            dirs (dict, optional): Dict, where 
+            dirs (dict, optional): Dict, where
                 to write dirs found among folder
                 files. Defaults to None
-            dirsFiles (dict, optional): Dict, 
-                where to write files found 
+            dirsFiles (dict, optional): Dict,
+                where to write files found
                 among folder files. Defaults
                 to None
             recursive (bool, optional): Parse
@@ -76,10 +75,9 @@ class DirCmpUtils():
             #  Calculate full subdir prefix
             if basePath:
                 file = os.path.relpath(filepath, basePath)
-            
+
             #  Fix layering of multiple calls
             if os.path.exists(filepath):
-                
                 #  Don't parse files, if it's a symbolic link
                 #  that points to files in the same parent directory
                 if basePath and os.path.islink(filepath):
@@ -88,10 +86,9 @@ class DirCmpUtils():
                         continue
 
                 if os.path.isdir(filepath):
-
                     if dirs is not None:
                         dirs[f"{file}{os.sep}"] = rootPath
-                        
+
                         #  Recursively extract subdirs and files
                         if recursive:
                             subdirs = {}
@@ -122,13 +119,13 @@ class DirCmpUtils():
 
                             if dirsFiles is not None:
                                 dirsFiles.update(subdirsFiles)
-                
+
                 elif dirsFiles is not None:
                     dirsFiles[file] = rootPath
 
             elif dirsFiles is not None:
                 dirsFiles.pop(file, None)
-    
+
     @staticmethod
     def list_to_dict(files: list[str], path) -> dict[str, str]:
         '''
@@ -143,7 +140,7 @@ class DirCmpUtils():
             dict[str, str]: Converted dict
         '''
         return dict((file, path) for file in files)
-    
+
     @staticmethod
     def dict_to_list(files: dict[str, str]) -> list[str]:
         '''
@@ -172,7 +169,7 @@ class DirCmpUtils():
         for file in files.copy():
             files.append(f"{subdir}{os.sep}{file}")
             files.remove(file)
-    
+
     @staticmethod
     def update_list(values: list, target: list):
         '''
@@ -189,17 +186,16 @@ class DirCmpUtils():
 
 
 class DirCmp(filecmp.dircmp):
-
     def __init__(
         self,
         leftPath: str,
         rightPath: str,
-        ignore: list[str]=None,
-        hide: list[str]=None,
-        subdirMode: bool=False,
-        leftBasePath: str="",
-        rightBasePath: str="",
-        progressbar: bool=False
+        ignore: list[str] = None,
+        hide: list[str] = None,
+        subdirMode: bool = False,
+        leftBasePath: str = "",
+        rightBasePath: str = "",
+        progressbar: bool = False
     ):
         '''
         Better dircmp with subdirs indexing
@@ -215,10 +211,10 @@ class DirCmp(filecmp.dircmp):
                 that the current comparison is for a subdirectory.
                 Defaults to False.
             leftBasePath (str, optional): System argument, points
-                to the root of the left directory. Needed to 
+                to the root of the left directory. Needed to
                 calculate names. Defaults to "".
             rightBasePath (str, optional): System argument, points
-                to the root of the right directory. Needed to 
+                to the root of the right directory. Needed to
                 calculate names. Defaults to "".
             progressbar (bool, optional): Render progress bar while
                 running or not. If True an object of type ProgressBar
@@ -230,7 +226,7 @@ class DirCmp(filecmp.dircmp):
         '''
         super().__init__(leftPath, rightPath, ignore, hide)
         self.subdirMode = subdirMode
-        
+
         if not subdirMode:
             self.leftBasePath = self.left
             self.rightBasePath = self.right
@@ -252,7 +248,12 @@ class DirCmp(filecmp.dircmp):
             #  to track number of indexed files for sure
             self.renderingProcess = multiprocessing.Process(
                 target=ProgressBar(size=40, clearMode=True).start_rendering_mp,
-                args=(prefix, multiprocessing.Value("i", -1), self.postfix, self.finished),
+                args=(
+                    prefix,
+                    multiprocessing.Value("i", -1),
+                    self.postfix,
+                    self.finished
+                ),
                 daemon=True
             )
             self.renderingProcess.start()
@@ -273,13 +274,13 @@ class DirCmp(filecmp.dircmp):
             f"progressbar={self.progressbar}"
             ")"
         )
-    
+
     def finish_progressbar(self):
         '''
         Finish progressbar if it exists
         '''
         if hasattr(self, "renderingProcess"):
-            with (self.postfix.get_lock(), self.finished.get_lock()):
+            with self.postfix.get_lock(), self.finished.get_lock():
                 self.postfix.value = f"finished".encode()
                 self.finished.value = True
             self.renderingProcess.join()
@@ -288,12 +289,22 @@ class DirCmp(filecmp.dircmp):
         '''
         Compute common names but with subdirs
         '''
-        left = dict(zip(map(os.path.normcase, self.left_list), self.left_list))
-        right = dict(zip(map(os.path.normcase, self.right_list), self.right_list))
-        self.common = list(map(left.__getitem__, filter(right.__contains__, left)))
-        self.left_only = list(map(left.__getitem__, filterfalse(right.__contains__, left)))
-        self.right_only = list(map(right.__getitem__, filterfalse(left.__contains__, right)))
-        
+        left = dict(
+            zip(map(os.path.normcase, self.left_list), self.left_list)
+        )
+        right = dict(
+            zip(map(os.path.normcase, self.right_list), self.right_list)
+        )
+        self.common = list(
+            map(left.__getitem__, filter(right.__contains__, left))
+        )
+        self.left_only = list(
+            map(left.__getitem__, filterfalse(right.__contains__, left))
+        )
+        self.right_only = list(
+            map(right.__getitem__, filterfalse(left.__contains__, right))
+        )
+
         #  SubdirMode : Convert filenames to subdir/names
         if self.subdirMode:
             subdir = os.path.relpath(self.left, self.leftBasePath)
@@ -342,19 +353,19 @@ class DirCmp(filecmp.dircmp):
             DirCmpUtils.update_list(compared.common_files, self.common_files)
             DirCmpUtils.update_list(compared.common_funny, self.common_funny)
             DirCmpUtils.update_list(compared.common, self.common)
-        
+
         #  Force parse left_only_dirs and right_only_dirs
         #  Cast dir names to dir/ format
         if not self.common_dirs:
             self.phase5()
-    
+
     def phase2(self):
         '''
         Add conversion dir names to dir/ format
         '''
         super().phase2()
         common_dirs = {}
-        
+
         DirCmpUtils.parse_dirs(
             files=self.common_dirs,
             rootPath=self.left,
@@ -362,9 +373,9 @@ class DirCmp(filecmp.dircmp):
             recursive=False,
             basePath=self.leftBasePath
         )
-        
+
         self.common_dirs = DirCmpUtils.dict_to_list(common_dirs)
-        
+
         for dir in self.common_dirs:
             oldDir = dir.split(os.sep)[-2]
             self.common.remove(oldDir)
@@ -373,7 +384,7 @@ class DirCmp(filecmp.dircmp):
             oldDir = dir[:-1]
             self.left_list.remove(oldDir)
             self.right_list.remove(oldDir)
-            
+
             self.left_list.append(dir)
             self.right_list.append(dir)
 
@@ -382,10 +393,7 @@ class DirCmp(filecmp.dircmp):
         Compare files content, not only os.stat attributes
         '''
         xx = filecmp.cmpfiles(
-            a=self.left,
-            b=self.right,
-            common=self.common_files,
-            shallow=False
+            a=self.left, b=self.right, common=self.common_files, shallow=False
         )
         self.same_files, self.diff_files, self.funny_files = xx
 
@@ -393,10 +401,7 @@ class DirCmp(filecmp.dircmp):
         '''
         Find out all subdirectories not only common
         '''
-        common_dirs = DirCmpUtils.list_to_dict(
-            self.common_dirs,
-            self.left
-        )
+        common_dirs = DirCmpUtils.list_to_dict(self.common_dirs, self.left)
         self.subdirs = {
             **common_dirs,
             **self.left_only_dirs,
@@ -424,10 +429,9 @@ class DirCmp(filecmp.dircmp):
                 self.left_list.remove(dir[:-1])
         self.left_only.update(self.left_only_dirs)
         DirCmpUtils.update_list(
-            DirCmpUtils.dict_to_list(self.left_only_dirs),
-            self.left_list
+            DirCmpUtils.dict_to_list(self.left_only_dirs), self.left_list
         )
-        
+
         self.right_only_dirs = {}
         DirCmpUtils.parse_dirs(
             DirCmpUtils.dict_to_list(self.right_only),
@@ -443,8 +447,7 @@ class DirCmp(filecmp.dircmp):
                 self.right_list.remove(dir[:-1])
         self.right_only.update(self.right_only_dirs)
         DirCmpUtils.update_list(
-            DirCmpUtils.dict_to_list(self.right_only_dirs),
-            self.right_list
+            DirCmpUtils.dict_to_list(self.right_only_dirs), self.right_list
         )
 
     methodmap = dict(
@@ -465,11 +468,7 @@ class DirCmp(filecmp.dircmp):
     )
 
 
-def contains_only(
-    string: str,
-    substring: str,
-    exclude: list[str]=[]
-) -> bool:
+def contains_only(string: str, substring: str, exclude: list[str] = []) -> bool:
     '''
     Check if a string contains a substring
     and does not contain any other substrings
@@ -529,7 +528,7 @@ def sorted_paths(files: list[str]) -> list[str]:
         if file.endswith(os.sep):
             files.remove(file)
             dirs.append(file)
-    
+
     if not dirs:
         return files
 
@@ -543,7 +542,7 @@ def sorted_paths(files: list[str]) -> list[str]:
             if contains_only(file, dir, dirs):
                 files.remove(file)
                 sortedFiles.append(file)
-    
+
     insert_to_sorted(files, sortedFiles)
     return sortedFiles
 
@@ -576,14 +575,14 @@ def get_storage_drives() -> set[str]:
         bufferSize = ctypes.windll.kernel32.GetLogicalDriveStringsW(0, None)
         buffer = ctypes.create_string_buffer(bufferSize * 2)
         ctypes.windll.kernel32.GetLogicalDriveStringsW(bufferSize, buffer)
-        
+
         drives = buffer.raw.decode("utf-16-le").split("\0")
         drives = filter(None, drives)
-        
+
         systemDrive = os.environ.get("SYSTEMDRIVE")
         systemDrive = os.path.join(systemDrive, os.sep)
         drives = set(filter(systemDrive.__ne__, drives))
-    
+
     #  Only Linux support (using procfs)
     else:
         #  parse filesystems
@@ -623,11 +622,11 @@ def get_storage_drives() -> set[str]:
 def compare_backups(
     backupFilename: str,
     backupDestination: str,
-    backupPassword: bytes | None=None,
-    reportFilepath: str="compared.txt",
-    preferredEncoding: str="cp866",
-    ignore: list[str]=[".git"],
-    path: str | None=None
+    backupPassword: bytes | None = None,
+    reportFilepath: str = "compared.txt",
+    preferredEncoding: str = "cp866",
+    ignore: list[str] = [".git"],
+    path: str | None = None
 ):
     '''
     Detects backups on connected drives and
@@ -655,10 +654,10 @@ def compare_backups(
     if path:
         path = path.rstrip("/").rstrip("\\")
         path, backupFilename = os.path.split(path)
-        drives = { path }
+        drives = {path}
     else:
         drives = get_storage_drives()
-    
+
     report = open(reportFilepath, "w", encoding="utf-8")
     backupName, backupExtension = os.path.splitext(backupFilename)
 
@@ -667,12 +666,12 @@ def compare_backups(
             if backupFilename in os.listdir(drive):
                 print(f"Found backup in {drive}")
                 backupFilepath = os.path.join(drive, backupFilename)
-                
+
                 if backupExtension:
                     # windows create symbolic links rights
                     if os.name == "nt":
                         run_as_admin()
-                    
+
                     print(f"Extracting {backupFilepath}")
 
                     if backupExtension == ".zip":
@@ -685,11 +684,12 @@ def compare_backups(
                             useBarPrefix=False
                         ) as zip:
                             zip.extractall(
-                                path=tempfile.gettempdir(),
-                                pwd=backupPassword
+                                path=tempfile.gettempdir(), pwd=backupPassword
                             )
 
-                    backupFilepath = os.path.join(tempfile.gettempdir(), backupName)
+                    backupFilepath = os.path.join(
+                        tempfile.gettempdir(), backupName
+                    )
 
                 print(f"Comparing with {backupDestination}")
                 compared = DirCmp(
@@ -744,10 +744,10 @@ def compare_backups(
 
             else:
                 raise FileNotFoundError
-        
+
         except (PermissionError, FileNotFoundError):
             drives.remove(drive)
-    
+
     if drives:
         print(f"View {os.path.basename(reportFilepath)} for detailed report")
     else:

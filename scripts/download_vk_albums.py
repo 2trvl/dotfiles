@@ -45,22 +45,13 @@ parser.add_argument(
 
 requiredGroup = parser.add_argument_group("required arguments")
 requiredGroup.add_argument(
-    "-l",
-    "--login",
-    required=True,
-    help="vk account login"
+    "-l", "--login", required=True, help="vk account login"
 )
 requiredGroup.add_argument(
-    "-p",
-    "--password",
-    required=True,
-    help="vk account password"
+    "-p", "--password", required=True, help="vk account password"
 )
 requiredGroup.add_argument(
-    "-o",
-    "--owner",
-    required=True,
-    help="albums owner id or username"
+    "-o", "--owner", required=True, help="albums owner id or username"
 )
 
 args = parser.parse_args()
@@ -76,9 +67,7 @@ albumsID = args.albums
 
 #  Username to id
 if not ownerID.replace("-", "", 1).isnumeric():
-    ownerID = vk.utils.resolveScreenName(
-        screen_name=ownerID
-    )
+    ownerID = vk.utils.resolveScreenName(screen_name=ownerID)
     ownerID["object_id"] = str(ownerID["object_id"])
     #  Group id must must be indicated with the sign "-"
     if ownerID["type"] == "group":
@@ -87,9 +76,7 @@ if not ownerID.replace("-", "", 1).isnumeric():
 
 try:
     albums = vk.photos.getAlbums(
-        owner_id=ownerID,
-        albums_id=albumsID,
-        need_system=1
+        owner_id=ownerID, albums_id=albumsID, need_system=1
     )
 except vk_api.exceptions.ApiError as ApiError:
     print(ApiError)
@@ -100,7 +87,7 @@ if albumsID is None:
     albumsID = []
     for index in show_menu(
         "Enter album numbers to download",
-        [ album["title"] for album in albums["items"] ]
+        [album["title"] for album in albums["items"]]
     ):
         albumsID.append(albums["items"][index]["id"])
 
@@ -119,13 +106,9 @@ if args.download_path:
     os.chdir(args.download_path)
 
 if ownerID.startswith("-"):
-    ownerName = vk.groups.getById(
-        group_id=ownerID[1:]
-    )[0]["name"]
+    ownerName = vk.groups.getById(group_id=ownerID[1:])[0]["name"]
 else:
-    ownerName = vk.users.get(
-        user_ids=ownerID
-    )[0]
+    ownerName = vk.users.get(user_ids=ownerID)[0]
     ownerName = f"{ownerName['first_name']} {ownerName['last_name']}"
 
 ownerName = f"{ownerID} {ownerName}"
@@ -148,11 +131,11 @@ charsForbidden = str.maketrans(charsForbidden)
 
 for album in albums:
     print(f"Downloading \"{album['title']}\" {album['size']} photos")
-    
+
     album["title"] = album["title"].translate(charsForbidden)
     os.makedirs(album["title"], exist_ok=True)
     os.chdir(album["title"])
-    
+
     #  Maximum number of photos returned by photos.get is 1000
     for chunk in range(math.ceil(album["size"] / 1000)):
         photos = vk.photos.get(
@@ -160,27 +143,27 @@ for album in albums:
             album_id=album["id"],
             photo_sizes=1,
             count=1000,
-            offset=chunk*1000
+            offset=chunk * 1000
         )["items"]
 
         for photo in photos:
             #  Find photo with maximum resolution
             originalPhoto = {"width": 0, "url": ""}
-            
+
             for size in photo["sizes"]:
                 if size["width"] > originalPhoto["width"]:
                     originalPhoto["width"] = size["width"]
                     originalPhoto["url"] = size["url"]
-            
+
             filename = urlparse(originalPhoto["url"])
             filename = filename.path.rsplit("/", 1)[1]
             filename = f"{photo['album_id']}_{filename}"
-            
+
             urlretrieve(originalPhoto["url"], filename)
-            
+
             #  Write description to image
             with pyexiv2.Image(filename) as image:
-                image.modify_iptc({ "Iptc.Application2.Caption": photo["text"] })
+                image.modify_iptc({"Iptc.Application2.Caption": photo["text"]})
 
             print(filename)
 

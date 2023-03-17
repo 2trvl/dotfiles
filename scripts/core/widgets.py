@@ -54,20 +54,20 @@ def clear_terminal(rows: int) -> bool:
     if os.name != "nt":
         print(f"\033[{rows}A \033[0J", end="\r")
         return True
-    
+
     hConsoleOutput = ctypes.windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
     lpConsoleScreenBufferInfo = CONSOLE_SCREEN_BUFFER_INFO()
-    
+
     if not ctypes.windll.kernel32.GetConsoleScreenBufferInfo(
-        hConsoleOutput,
-        ctypes.byref(lpConsoleScreenBufferInfo)
-    ): return False
+        hConsoleOutput, ctypes.byref(lpConsoleScreenBufferInfo)
+    ):
+        return False
 
     lpConsoleScreenBufferInfo.dwCursorPosition.Y -= rows
     if not ctypes.windll.kernel32.SetConsoleCursorPosition(
-        hConsoleOutput,
-        lpConsoleScreenBufferInfo.dwCursorPosition
-    ): return False
+        hConsoleOutput, lpConsoleScreenBufferInfo.dwCursorPosition
+    ):
+        return False
 
     if not ctypes.windll.kernel32.FillConsoleOutputCharacterA(
         hConsoleOutput,
@@ -75,7 +75,8 @@ def clear_terminal(rows: int) -> bool:
         lpConsoleScreenBufferInfo.dwSize.X * rows,
         lpConsoleScreenBufferInfo.dwCursorPosition,
         ctypes.byref(wintypes.DWORD(0))
-    ): return False
+    ):
+        return False
 
     ctypes.windll.kernel32.FillConsoleOutputAttribute(
         hConsoleOutput,
@@ -88,15 +89,14 @@ def clear_terminal(rows: int) -> bool:
 
 
 class ProgressBar():
-
     def __init__(
         self,
-        size: int=30,
-        unit: str="",
-        prefix: str="",
-        frames: str="-\|/=",
-        timeout: float=0.1,
-        clearMode: bool=False
+        size: int = 30,
+        unit: str = "",
+        prefix: str = "",
+        frames: str = "-\|/=",
+        timeout: float = 0.1,
+        clearMode: bool = False
     ):
         '''
         Progress bar for unknown process time
@@ -155,18 +155,18 @@ class ProgressBar():
             f"clearMode={self.clearMode}"
             ")"
         )
-    
+
     def render(self, counter: int) -> bool:
         '''
         Render progress bar
 
         Args:
             counter (int): Number of completed task units.
-            If the counter is negative, then it is omitted
+                If the counter is negative, then it is omitted
 
         Returns:
             bool: Should the next frame of the progress bar
-            be rendered (equals to not finished)
+                be rendered (equals to not finished)
         '''
         if counter >= 0:
             counter = f" {counter}"
@@ -205,6 +205,7 @@ class ProgressBar():
                 ("size",     ctypes.c_int),
                 ("visible",  ctypes.c_byte)
             ]
+
     else:
         #  ANSI escape sequences
         #  Part of common private modes
@@ -217,27 +218,30 @@ class ProgressBar():
 
         Args:
             visibility (bool): Visibility of cursor.
-            True to show, False to hide.
+                True to show, False to hide.
         '''
         if not WINDOWS_VT_MODE():
-            ESC_CODE = self.ESC_SHOW_CURSOR if visibility else self.ESC_HIDE_CURSOR
+            ESC_CODE = (
+                self.ESC_SHOW_CURSOR if visibility else self.ESC_HIDE_CURSOR
+            )
             print(ESC_CODE, end="\r", flush=True)
             return
 
-        hConsoleOutput = ctypes.windll.kernel32.GetStdHandle(self.STD_OUTPUT_HANDLE)
+        hConsoleOutput = ctypes.windll.kernel32.GetStdHandle(
+            self.STD_OUTPUT_HANDLE
+        )
         lpConsoleCursorInfo = self.CONSOLE_CURSOR_INFO()
-        
+
         if not ctypes.windll.kernel32.GetConsoleCursorInfo(
-            hConsoleOutput,
-            ctypes.byref(lpConsoleCursorInfo)
-        ): return
-        
+            hConsoleOutput, ctypes.byref(lpConsoleCursorInfo)
+        ):
+            return
+
         lpConsoleCursorInfo.visible = visibility
         ctypes.windll.kernel32.SetConsoleCursorInfo(
-            hConsoleOutput,
-            ctypes.byref(lpConsoleCursorInfo)
-        )  
-    
+            hConsoleOutput, ctypes.byref(lpConsoleCursorInfo)
+        )
+
     def start_rendering(self):
         '''
         Threading version of start_rendering
@@ -312,7 +316,7 @@ def _parse_dialog_answer(value: str) -> bool | None:
 
     Returns:
         bool | None: If is positive returns True,
-        if not False, if the answer is not clear None
+            if not False, if the answer is not clear None
     '''
     value = value.lower()
 
@@ -334,7 +338,7 @@ def show_dialog(question: str) -> bool:
 
     Returns:
         bool: True for positive and False for
-        negative answer
+            negative answer
     '''
     while True:
         if USE_DMENU:
@@ -346,7 +350,7 @@ def show_dialog(question: str) -> bool:
             if answer is None:
                 clear_terminal(1)
                 continue
-        
+
         return answer
 
 
@@ -381,15 +385,13 @@ def show_input(prompt: str, valueType: T) -> T:
 
 
 def _show_terminal_menu(
-    prompt: str,
-    items: list[str],
-    indentSize: int=2
+    prompt: str, items: list[str], indentSize: int = 2
 ) -> set[int]:
     print(f"{prompt} (0,1,2,0-2):")
-    
+
     for index, item in enumerate(items):
         print(f"{' ' * indentSize}{index}. {item}")
-    
+
     selection = input("> ")
     return _parse_menu_selection(selection, index)
 
@@ -411,7 +413,7 @@ def _parse_menu_selection(selection: str, maxValue: int) -> set[int]:
     '''
     selection = selection.split(",")
     indexes = set()
-    
+
     for slice in selection:
         if slice.startswith("-"):
             raise ValueError

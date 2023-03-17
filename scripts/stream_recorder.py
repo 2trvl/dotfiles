@@ -48,16 +48,18 @@ try:
     #  Sites specific args
     YoutubeIE = yt_dlp.extractor.get_info_extractor("Youtube")
     TwitchStreamIE = yt_dlp.extractor.get_info_extractor("TwitchStream")
-    
+
     if YoutubeIE.suitable(args.url):
-        ydlOpts.update({
-            "noplaylist": True,
-            "live_from_start": True,
-            "wait_for_video": (0, 60)
-        })
+        ydlOpts.update(
+            {
+                "noplaylist": True,
+                "live_from_start": True,
+                "wait_for_video": (0, 60)
+            }
+        )
 
     elif TwitchStreamIE.suitable(args.url):
-        ydlOpts.update({ "fixup": "never" })
+        ydlOpts.update({"fixup": "never"})
 
     with yt_dlp.YoutubeDL(ydlOpts) as ydl:
         ydl.extract_info(args.url)
@@ -68,13 +70,6 @@ except yt_dlp.utils.DownloadError:
     filename = datetime.now()
     filename = filename.strftime("\"%Y-%m-%d %H-%M-%S.mp4\"")
 
-    yt_dlp.utils.Popen.run([
-        "ffmpeg",
-        "-i",
-        args.url,
-        "-c:v",
-        "copy",
-        "-c:a",
-        "copy",
-        filename
-    ])
+    yt_dlp.utils.Popen.run(
+        ["ffmpeg", "-i", args.url, "-c:v", "copy", "-c:a", "copy", filename]
+    )
