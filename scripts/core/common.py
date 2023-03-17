@@ -13,21 +13,6 @@ particular and is used in several scripts
 import functools
 import platform
 
-#  Characters not allowed in file names
-charsForbidden = {
-    "<":  "",
-    ">":  "",
-    ":":  "",
-    "\"": "",
-    "/":  "",
-    "\\": "",
-    "|":  "",
-    "?":  "",
-    "*":  ""
-}
-charsForbidden = str.maketrans(charsForbidden)
-
-
 @functools.cache
 def WINDOWS_VT_MODE() -> bool:
     '''

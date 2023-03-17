@@ -24,7 +24,6 @@ from urllib.request import urlretrieve
 import pyexiv2
 import vk_api
 
-from core.common import charsForbidden
 from core.widgets import show_menu
 
 parser = argparse.ArgumentParser(description="Vk Album Downloader")
@@ -132,6 +131,20 @@ else:
 ownerName = f"{ownerID} {ownerName}"
 os.makedirs(ownerName, exist_ok=True)
 os.chdir(ownerName)
+
+#  Characters not allowed in file names
+charsForbidden = {
+    "<":  "",
+    ">":  "",
+    ":":  "",
+    "\"": "",
+    "/":  "",
+    "\\": "",
+    "|":  "",
+    "?":  "",
+    "*":  ""
+}
+charsForbidden = str.maketrans(charsForbidden)
 
 for album in albums:
     print(f"Downloading \"{album['title']}\" {album['size']} photos")
