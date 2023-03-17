@@ -42,7 +42,6 @@ parser.add_argument(
 )
 args, ytDlpArgs = parser.parse_known_args()
 
-
 ytDlpArgs.extend([
     "--quiet",
     "--no-colors",

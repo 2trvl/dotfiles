@@ -64,15 +64,15 @@ requiredGroup.add_argument(
 )
 
 args = parser.parse_args()
-#  Named variables for simplicity
-ownerID = args.owner
-albumsID = args.albums
-
 
 vkSession = vk_api.VkApi(args.login, args.password)
 vkSession.auth()
 
 vk = vkSession.get_api()
+
+#  Named variables for simplicity
+ownerID = args.owner
+albumsID = args.albums
 
 #  Username to id
 if not ownerID.replace("-", "", 1).isnumeric():

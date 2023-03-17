@@ -33,7 +33,6 @@ parser.add_argument(
 )
 args, ytDlpArgs = parser.parse_known_args()
 
-
 if args.download_path:
     #  Clear recorder args
     #  To process yt_dlp options
