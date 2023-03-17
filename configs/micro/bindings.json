@@ -1,0 +1,8 @@
+{
+    "Alt-/": "lua:comment.comment",
+    "Alt-f": "command-edit:replace 'search' 'value' -a -l",
+    "Alt-r": "command:retab",
+    "Alt-h": "HSplit",
+    "Alt-v": "VSplit",
+    "CtrlUnderscore": "lua:comment.comment"
+}

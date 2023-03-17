@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# disable all devices before suspending
+#
+# this is done because some usb devices don't allow sleep
+# so computer is guaranteed to go to sleep
+# and wake up only when the power button is pressed
+#
+# i disable devices by their pci bus because names can be duplicated
+
+case $ZZZ_MODE in
+    suspend)
+        set -- $(awk '/enabled/ {print substr($4,5)}' /proc/acpi/wakeup)
+        for _device in "$@"; do
+            echo "disabled" > /sys/bus/pci/devices/"$_device"/power/wakeup
+        done
+        ;;
+esac

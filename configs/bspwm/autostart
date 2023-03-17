@@ -1,0 +1,59 @@
+#!/bin/zsh
+
+_restart() {
+    pkill -u $UID -f "$1"
+    
+    while pgrep -u $UID -f "$1" >/dev/null; do
+        sleep 0.1
+    done
+    
+    nohup "$@" >/dev/null 2>&1 &
+}
+
+_wait_window() {
+    while true; do
+        _window_id=$(bspc query -N -n newest)
+        _pid=$(xdo pid "$_window_id" 2>/dev/null)
+        _name=$(ps -p "$_pid" -o comm= 2>/dev/null)
+        if [ "$_name" = "$1" ]; then
+            break
+        else
+            sleep 0.1
+        fi
+    done
+}
+
+# keyboard
+_restart sxhkd
+
+# menu bar
+_restart polybar 2trvl
+
+# wallpaper
+feh --bg-fill "$HOME/Pictures/Wallpapers/Kamchatka_Blue.jpg"
+
+# normal cursor when not placed on windows
+xsetroot -cursor_name left_ptr
+
+# lockscreen
+_restart xss-lock -- betterlockscreen -l
+
+# don't blank screen when using joystick
+_restart /usr/local/bin/joystickwake --cooldown 555 --loglevel error
+
+# forward media control from bluetooth headset
+_restart mpris-proxy
+
+# enable file transfer via bluetooth
+_restart /usr/libexec/bluetooth/obexd -r "$HOME/Downloads" -l -a
+
+# mate polkit agent
+_restart /usr/libexec/polkit-mate-authentication-agent-1
+
+# rest break reminders
+_restart workrave
+_wait_window workrave
+bspc node "$_window_id" --flag hidden=on
+
+# night color
+_restart redshift -l 59.9343:30.3351 -b 1.0:0.8

@@ -1,0 +1,26 @@
+#!/bin/zsh
+
+# close all windows
+for _window_id in $(bspc query -N); do
+    bspc node "$_window_id" -c
+done
+
+# specified user id or default
+if [ -n "$1" ]; then
+    _user_id=$1
+else
+    _user_id=$UID
+fi
+
+# close autostart apps
+pkill -u $_user_id -f sxhkd
+pkill -u $_user_id -f polybar
+pkill -u $_user_id -f xss-lock
+pkill -u $_user_id -f joystickwake
+pkill -u $_user_id -f mpris-proxy
+pkill -u $_user_id -f obexd
+pkill -u $_user_id -f polkit-mate-authentication-agent-1
+pkill -u $_user_id -f redshift
+
+# quit bspwm
+bspc quit

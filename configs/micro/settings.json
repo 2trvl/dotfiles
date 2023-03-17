@@ -1,0 +1,9 @@
+{
+    "autosu": true,
+    "keepautoindent": true,
+    "parsecursor": true,
+    "savecursor": true,
+    "softwrap": true,
+    "tabstospaces": true,
+    "wordwrap": true
+}

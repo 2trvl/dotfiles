@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# lock screen before suspend
+
+case $ZZZ_MODE in
+    suspend|hibernate)
+        xset s activate
+        sleep 1
+        ;;
+esac

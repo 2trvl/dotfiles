@@ -1,0 +1,8 @@
+UUID=[...] / ext4 discard,noatime,errors=remount-ro 0 1
+UUID=[...] /boot/efi vfat rw,relatime 0 2
+UUID=[...] /home ext4 rw,relatime 0 2
+
+# SSD tweak: temporary directories as tmpfs
+tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
+tmpfs /var/tmp tmpfs defaults,noatime,mode=1777 0 0
+tmpfs /var/log tmpfs defaults,noatime,mode=0755 0 0

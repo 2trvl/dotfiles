@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# restore nvidia video memory after suspend if needed
+
+case $ZZZ_MODE in
+    suspend|hibernate)
+        if [ ! -f /proc/driver/nvidia/suspend ]; then
+            exit 0
+        fi
+        
+        echo "resume" > /proc/driver/nvidia/suspend
+        
+        # switch back to vt that was running before suspend
+        _vt_number=$(cat /var/run/nvidia-sleep/Xorg.vt_number)
+        rm /var/run/nvidia-sleep/Xorg.vt_number
+        chvt "$_vt_number"
+        exit $?
+        ;;
+    *)
+        exit 0
+        ;;
+esac

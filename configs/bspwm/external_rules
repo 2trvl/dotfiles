@@ -1,0 +1,67 @@
+#!/bin/sh
+
+# thanks tiagovla for example
+
+border='' \
+center='' \
+class=${2} \
+desktop='' \
+focus='' \
+follow='' \
+hidden='' \
+id=${1?} \
+instance=${3} \
+layer='' \
+locked='' \
+manage='' \
+marked='' \
+misc=${4} \
+monitor='' \
+node='' \
+private='' \
+rectangle='' \
+split_dir='' \
+split_ratio='' \
+state='' \
+sticky='' \
+urgent=''
+
+gimp() {
+    desktop=5
+    follow=on
+}
+
+spotify() {
+    desktop=5
+    state=tiled
+}
+
+case $instance.$class in
+    *.Gimp*) gimp ;;
+    .)
+        case $(ps -p "$(xdo pid "$id")" -o comm= 2>/dev/null) in
+            spotify) spotify ;;
+        esac
+    ;;
+esac
+
+printf '%s' \
+    ${border:+"border=$border "} \
+    ${center:+"center=$center "} \
+    ${desktop:+"desktop=$desktop "} \
+    ${focus:+"focus=$focus "} \
+    ${follow:+"follow=$follow "} \
+    ${hidden:+"hidden=$hidden "} \
+    ${layer:+"layer=$layer "} \
+    ${locked:+"locked=$locked "} \
+    ${manage:+"manage=$manage "} \
+    ${marked:+"marked=$marked "} \
+    ${monitor:+"monitor=$monitor "} \
+    ${node:+"node=$node "} \
+    ${private:+"private=$private "} \
+    ${rectangle:+"rectangle=$rectangle "} \
+    ${split_dir:+"split_dir=$split_dir "} \
+    ${split_ratio:+"split_ratio=$split_ratio "} \
+    ${state:+" state=$state "} \
+    ${sticky:+"sticky=$sticky "} \
+    ${urgent:+"urgent=$urgent "}

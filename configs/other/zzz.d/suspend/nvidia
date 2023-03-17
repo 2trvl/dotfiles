@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# save all contents of nvidia video memory before suspend if needed
+#
+# because nvidia video cards do not always wake up correctly
+# which results in a black screen
+#
+# code taken from arch's nvidia-utils/nvidia-sleep.sh
+
+case $ZZZ_MODE in
+    suspend|hibernate)
+        if [ ! -f /proc/driver/nvidia/suspend ]; then
+            exit 0
+        fi
+        
+        # save running vt number to resume later
+        mkdir -p /var/run/nvidia-sleep
+        fgconsole > /var/run/nvidia-sleep/Xorg.vt_number
+        
+        chvt 63
+        _terminal_changed=$?
+        
+        if [ $_terminal_changed -ne 0 ]; then
+            exit $_terminal_changed
+        fi
+        
+        echo "$ZZZ_MODE" > /proc/driver/nvidia/suspend
+        exit $?
+        ;;
+    *)
+        exit 0
+        ;;
+esac
