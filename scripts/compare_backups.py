@@ -668,7 +668,7 @@ def compare_backups(
                 backupFilepath = os.path.join(drive, backupFilename)
 
                 if backupExtension:
-                    # windows create symbolic links rights
+                    #  windows create symbolic links rights
                     if os.name == "nt":
                         run_as_admin()
 

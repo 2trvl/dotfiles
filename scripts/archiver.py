@@ -350,16 +350,16 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         offset_cd = endrec[zipfile._ECD_OFFSET]         # offset of central directory
         self._comment = endrec[zipfile._ECD_COMMENT]    # archive comment
 
-        # "concat" is zero, unless zip was concatenated to another file
+        #  "concat" is zero, unless zip was concatenated to another file
         concat = endrec[zipfile._ECD_LOCATION] - size_cd - offset_cd
         if endrec[zipfile._ECD_SIGNATURE] == zipfile.stringEndArchive64:
-            # If Zip64 extension structures are present, account for them
+            #  If Zip64 extension structures are present, account for them
             concat -= zipfile.sizeEndCentDir64 + zipfile.sizeEndCentDir64Locator
 
         if self.debug > 2:
             inferred = concat + offset_cd
             print("given, inferred, offset", offset_cd, inferred, concat)
-        # self.start_dir:  Position of start of central directory
+        #  self.start_dir:  Position of start of central directory
         self.start_dir = offset_cd + concat
         fp.seek(self.start_dir, 0)
         data = fp.read(size_cd)
@@ -379,14 +379,14 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             filename = fp.read(centdir[zipfile._CD_FILENAME_LENGTH])
             flags = centdir[5]
             if flags & 0x800:
-                # UTF-8 file names extension
+                #  UTF-8 file names extension
                 filename = filename.decode('utf-8')
             else:
                 # ----------------------------------------------------
                 #    Fix broken filenames due to incorrect encoding
                 # ----------------------------------------------------
                 filename = self.decode_filename(filename)
-            # Create ZipInfo instance to store file information
+            #  Create ZipInfo instance to store file information
             x = zipfile.ZipInfo(filename)
             x.extra = fp.read(centdir[zipfile._CD_EXTRA_FIELD_LENGTH])
             x.comment = fp.read(centdir[zipfile._CD_COMMENT_LENGTH])
@@ -409,7 +409,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                     "zip file version %.1f" % (x.extract_version / 10)
                 )
             x.volume, x.internal_attr, x.external_attr = centdir[15:18]
-            # Convert date/time code to (year, month, day, hour, min, sec)
+            #  Convert date/time code to (year, month, day, hour, min, sec)
             x._raw_time = t
             x.date_time = (
                 (d >> 9) + 1980,
@@ -425,7 +425,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             self.filelist.append(x)
             self.NameToInfo[x.filename] = x
 
-            # update total bytes read from central directory
+            #  update total bytes read from central directory
             total = (
                 total
                 + zipfile.sizeCentralDir
@@ -465,16 +465,16 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 "Attempt to use ZIP archive that was already closed"
             )
 
-        # Make sure we have an info object
+        #  Make sure we have an info object
         if isinstance(name, zipfile.ZipInfo):
-            # 'name' is already an info object
+            #  'name' is already an info object
             zinfo = name
         elif mode == 'w':
             zinfo = zipfile.ZipInfo(name)
             zinfo.compress_type = self.compression
             zinfo._compresslevel = self.compresslevel
         else:
-            # Get info object for name
+            #  Get info object for name
             zinfo = self.getinfo(name)
 
         if mode == 'w':
@@ -487,7 +487,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 "Close the writing handle before trying to read."
             )
 
-        # Open for reading:
+        #  Open for reading:
         self._fileRefCnt += 1
         zef_file = zipfile._SharedFile(
             self.fp,
@@ -498,7 +498,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         )
 
         try:
-            # Skip the file header:
+            #  Skip the file header:
             fheader = zef_file.read(zipfile.sizeFileHeader)
             if len(fheader) != zipfile.sizeFileHeader:
                 raise zipfile.BadZipFile("Truncated file header")
@@ -511,17 +511,17 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 zef_file.read(fheader[zipfile._FH_EXTRA_FIELD_LENGTH])
 
             if zinfo.flag_bits & 0x20:
-                # Zip 2.7: compressed patched data
+                #  Zip 2.7: compressed patched data
                 raise NotImplementedError(
                     "compressed patched data (flag bit 5)"
                 )
 
             if zinfo.flag_bits & 0x40:
-                # strong encryption
+                #  strong encryption
                 raise NotImplementedError("strong encryption (flag bit 6)")
 
             if fheader[zipfile._FH_GENERAL_PURPOSE_FLAG_BITS] & 0x800:
-                # UTF-8 filename
+                #  UTF-8 filename
                 fname_str = fname.decode("utf-8")
             else:
                 # ----------------------------------------------------
@@ -535,7 +535,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                     % (zinfo.orig_filename, fname)
                 )
 
-            # check for encrypted flag & handle password
+            #  check for encrypted flag & handle password
             is_encrypted = zinfo.flag_bits & 0x1
             if is_encrypted:
                 if not pwd:
@@ -654,21 +654,21 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
 
         #  Original _extract_member() code
 
-        # build the destination pathname, replacing
-        # forward slashes to platform specific separators.
+        #  build the destination pathname, replacing
+        #  forward slashes to platform specific separators.
         arcname = arcname.replace('/', os.path.sep)
 
         if os.path.altsep:
             arcname = arcname.replace(os.path.altsep, os.path.sep)
-        # interpret absolute pathname as relative, remove drive letter or
-        # UNC path, redundant separators, "." and ".." components.
+        #  interpret absolute pathname as relative, remove drive letter or
+        #  UNC path, redundant separators, "." and ".." components.
         arcname = os.path.splitdrive(arcname)[1]
         invalid_path_parts = ('', os.path.curdir, os.path.pardir)
         arcname = os.path.sep.join(
             x for x in arcname.split(os.path.sep) if x not in invalid_path_parts
         )
         if os.path.sep == '\\':
-            # filter illegal characters on Windows
+            #  filter illegal characters on Windows
             arcname = self._sanitize_windows_name(arcname, os.path.sep)
 
         targetpath = os.path.join(targetpath, arcname)
@@ -691,7 +691,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                             targetpath = name
                             break
 
-        # Create all upper directories if necessary.
+        #  Create all upper directories if necessary.
         upperdirs = os.path.dirname(targetpath)
         if upperdirs and not os.path.exists(upperdirs):
             os.makedirs(upperdirs)
@@ -863,9 +863,9 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 "Can't write to ZIP archive while an open writing handle exists."
             )
 
-        # Make sure we have an info object
+        #  Make sure we have an info object
         if isinstance(member, str):
-            # get the info object
+            #  get the info object
             member = self.getinfo(member)
 
         if self.is_ignored(member.filename):
@@ -947,49 +947,49 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         if self.is_ignored(arcname):
             return False
 
-        # get a sorted filelist by header offset, in case the dir order
-        # doesn't match the actual entry order
+        #  get a sorted filelist by header offset, in case the dir order
+        #  doesn't match the actual entry order
         fp = self.fp
         entry_offset = 0
         filelist = sorted(self.filelist, key=attrgetter('header_offset'))
         for i in range(len(filelist)):
             info = filelist[i]
-            # find the target member
+            #  find the target member
             if info.header_offset < member.header_offset:
                 continue
 
-            # get the total size of the entry
+            #  get the total size of the entry
             entry_size = None
             if i == len(filelist) - 1:
                 entry_size = self.start_dir - info.header_offset
             else:
                 entry_size = filelist[i + 1].header_offset - info.header_offset
 
-            # found the member, set the entry offset
+            #  found the member, set the entry offset
             if member == info:
                 entry_offset = entry_size
                 continue
 
-            # Move entry
-            # read the actual entry data
+            #  Move entry
+            #  read the actual entry data
             fp.seek(info.header_offset)
             entry_data = fp.read(entry_size)
 
-            # update the header
+            #  update the header
             info.header_offset -= entry_offset
 
-            # write the entry to the new position
+            #  write the entry to the new position
             fp.seek(info.header_offset)
             fp.write(entry_data)
             fp.flush()
 
-        # update state
+        #  update state
         self.start_dir -= entry_offset
         self.filelist.remove(member)
         del self.NameToInfo[member.filename]
         self._didModify = True
 
-        # seek to the start of the central dir
+        #  seek to the start of the central dir
         fp.seek(self.start_dir)
 
         if not member.is_dir():
@@ -1098,9 +1098,9 @@ if __name__ == "__main__":
             clearBarAfterFinished=args.verbose
         ) as zip:
             if args.extract:
-                # on windows users need "create symbolic links" rights
-                # to create a symlink. by default, normal users don't have it
-                # but administrator does
+                #  on windows users need "create symbolic links" rights
+                #  to create a symlink. by default, normal users don't have it
+                #  but administrator does
                 if os.name == "nt":
                     run_as_admin()
 
@@ -1116,9 +1116,7 @@ if __name__ == "__main__":
                                 pwd=args.password
                             )
                         else:
-                            print(
-                                f"extract: There is no member named \"{member}\""
-                            )
+                            print(f"extract: There is no member named \"{member}\"")
 
             if args.write:
                 if "/" in args.write:
@@ -1139,9 +1137,7 @@ if __name__ == "__main__":
                         if member in members:
                             zip.remove(member, args.password)
                         else:
-                            print(
-                                f"remove: There is no member named \"{member}\""
-                            )
+                            print(f"remove: There is no member named \"{member}\"")
 
             if args.list:
                 zip.printdir()
