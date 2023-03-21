@@ -1,2 +1,2 @@
-import common
-import widgets
+from . import common
+from . import widgets

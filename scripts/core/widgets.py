@@ -17,7 +17,7 @@ import threading
 import time
 from typing import TypeVar
 
-from common import WINDOWS_VT_MODE
+from .common import WINDOWS_VT_MODE
 
 USE_DMENU = os.environ.get("USE_DMENU", "False") == "True"
 
