@@ -3,12 +3,12 @@
 '''
 This file is part of 2trvl/dotfiles
 Personal repository with scripts and configs
-Which is released under MIT License
+Which is released under MIT license
 Copyright (c) 2022 Andrew Shteren
----------------------------------------------
-               Stream Recorder               
----------------------------------------------
-Download livestreams (Experimental). 
+--------------------------------------------
+               Stream Recorder              
+--------------------------------------------
+Download livestreams (Experimental).
 Powered by yt-dlp a youtube-dl fork with
 additional features and fixes
 

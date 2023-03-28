@@ -1,17 +1,21 @@
 '''
-This file is part of 2trvl/dotfiles
-Personal repository with scripts and configs
-Which is released under MIT License
+This file is part of 2trvl/crossgui
+Common widgets between different environments
+Which is released under BSD-2-Clause license
 Copyright (c) 2022 Andrew Shteren
 ---------------------------------------------
-             Scripts Common Parts            
+          Environment Determination          
 ---------------------------------------------
-Code that cannot be attributed to anything in
-particular and is used in several scripts
+Windows terminal ANSI codes support. Auto and
+manual choice of environment: terminal, dmenu
+(supported by dmenu, rofi) and qt
 
 '''
 import functools
+import os
 import platform
+
+USE_DMENU = os.environ.get("USE_DMENU", "False") == "True"
 
 
 @functools.cache
@@ -72,21 +76,3 @@ def WINDOWS_VT_MODE() -> bool:
         atexit.register(disable_vt_processing)
 
     return False
-
-
-def run_as_admin():
-    '''
-    Exit with code 126 to have start.bat
-    restart the script with elevated privileges
-    if necessary
-    '''
-    if platform.system() != "Windows":
-        import os
-        isAdmin = os.getuid() == 0
-    else:
-        import ctypes
-        isAdmin = ctypes.windll.shell32.IsUserAnAdmin() == True
-
-    if not isAdmin:
-        import sys
-        sys.exit(126)

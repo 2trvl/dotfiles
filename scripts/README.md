@@ -3,7 +3,7 @@ See header of the script file for information.
 | Script                                         | Short description                                    |
 | :---                                           | :---                                                 |
 | [start.bat](start.bat)                         | Run python script in venv with environment variables |
-| [core/](core/)                                 | Scripts essentials                                   |
+| [common.py](common.py)                         | Scripts common parts                                 |
 | [archiver.py](archiver.py)                     | Work with zip archives                               |
 | [clearmyram.sh](clearmyram.sh)                 | Clear swap and file system cache                     |
 | [compare_backups.py](compare_backups.py)       | Compare the contents of folders                      |

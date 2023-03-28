@@ -3,11 +3,11 @@
 '''
 This file is part of 2trvl/dotfiles
 Personal repository with scripts and configs
-Which is released under MIT License
+Which is released under MIT license
 Copyright (c) 2022 Andrew Shteren
----------------------------------------------
-                File Archiver                
----------------------------------------------
+--------------------------------------------
+                File Archiver               
+--------------------------------------------
 Improved file archiving, correct encoding of
 names and symbolic links with progress bar
 
@@ -25,8 +25,9 @@ from typing import IO, Iterator
 
 import charset_normalizer
 
-from core.common import run_as_admin
-from core.widgets import ProgressBar, clear_terminal
+from common import run_as_admin
+from crossgui.widgets import ProgressBar
+from crossgui.widgets.terminal import clear_screen
 
 
 class ArchiveFile():
@@ -122,7 +123,7 @@ class ArchiveFile():
                 self.finished.value = True
             self.renderingProcess.join()
             if self.clearBarAfterFinished:
-                clear_terminal(1)
+                clear_screen(1)
             self._reset_progressbar()
 
     def is_ignored(self, path: str) -> bool:

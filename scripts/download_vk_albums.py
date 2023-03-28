@@ -3,14 +3,14 @@
 '''
 This file is part of 2trvl/dotfiles
 Personal repository with scripts and configs
-Which is released under MIT License
+Which is released under MIT license
 Copyright (c) 2022 Andrew Shteren
----------------------------------------------
-             Vk Album Downloader             
----------------------------------------------
+--------------------------------------------
+             Vk Album Downloader            
+--------------------------------------------
 Downloads albums of the specified person or
 group in VK. Saves photos at the best
-resolution and writes a description 
+resolution and writes a description
 to the metadata
 
 '''
@@ -24,7 +24,7 @@ from urllib.request import urlretrieve
 import pyexiv2
 import vk_api
 
-from core.widgets import show_menu
+from crossgui.widgets import show_menu
 
 parser = argparse.ArgumentParser(description="Vk Album Downloader")
 parser.add_argument(

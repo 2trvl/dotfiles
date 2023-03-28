@@ -3,14 +3,14 @@
 '''
 This file is part of 2trvl/dotfiles
 Personal repository with scripts and configs
-Which is released under MIT License
+Which is released under MIT license
 Copyright (c) 2022 Andrew Shteren
----------------------------------------------
-               Video Downloader              
----------------------------------------------
+--------------------------------------------
+              Video Downloader              
+--------------------------------------------
 Downloads videos from more than a thousand
-websites. Powered by yt-dlp a youtube-dl fork
-with additional features and fixes
+websites. Powered by yt-dlp a youtube-dl
+fork with additional features and fixes
 
 '''
 import argparse
@@ -18,7 +18,7 @@ import os
 
 import yt_dlp
 
-from core.widgets import show_menu
+from crossgui.widgets import show_menu
 
 parser = argparse.ArgumentParser(
     description="Video Downloader",
