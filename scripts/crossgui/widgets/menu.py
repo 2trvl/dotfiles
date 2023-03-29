@@ -10,7 +10,8 @@ Create a menu with a choice of one or
 multiple options
 
 '''
-from .environment import USE_DMENU
+from . import runtime
+from .runtime import Environment
 from .terminal import clear_screen
 
 
@@ -64,8 +65,7 @@ def _parse_menu_selection(selection: str, maxValue: int) -> set[int]:
 
 def show_menu(prompt: str, items: list[str]) -> set[int]:
     '''
-    Displays a menu based on the USE_DMENU
-    environment variable
+    Displays a menu based on runtime.graphics
 
     Args:
         prompt (str): Menu title or CTA
@@ -74,11 +74,15 @@ def show_menu(prompt: str, items: list[str]) -> set[int]:
     Returns:
         list[int]: Indexes of selected items
     '''
+    if runtime.graphics is Environment.Undefined:
+        runtime._use_available_graphics()
+
     while True:
         try:
-            if USE_DMENU:
+            if runtime.graphics is Environment.Dmenu:
                 return _show_dmenu_menu(prompt, items)
-            return _show_terminal_menu(prompt, items)
+            elif runtime.graphics is Environment.Terminal:
+                return _show_terminal_menu(prompt, items)
         except ValueError:
-            if not USE_DMENU:
+            if runtime.graphics is Environment.Terminal:
                 clear_screen(2 + len(items))

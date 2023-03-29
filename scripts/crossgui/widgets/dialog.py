@@ -9,7 +9,8 @@ Copyright (c) 2023 Andrew Shteren
 Create yes/no dialog and get answer back
 
 '''
-from .environment import USE_DMENU
+from . import runtime
+from .runtime import Environment
 from .terminal import clear_screen
 
 
@@ -46,8 +47,7 @@ def _parse_dialog_answer(value: str) -> bool | None:
 
 def show_dialog(question: str) -> bool:
     '''
-    Displays a dialog based on the USE_DMENU
-    environment variable
+    Displays a dialog based on runtime.graphics
 
     Args:
         question (str): Closed-ended question
@@ -56,12 +56,15 @@ def show_dialog(question: str) -> bool:
         bool: True for positive and False for
             negative answer
     '''
+    if runtime.graphics is Environment.Undefined:
+        runtime._use_available_graphics()
+
     while True:
-        if USE_DMENU:
+        if runtime.graphics is Environment.Dmenu:
             answer = _show_dmenu_dialog(question)
             if answer is None:
                 continue
-        else:
+        elif runtime.graphics is Environment.Terminal:
             answer = _show_terminal_dialog(question)
             if answer is None:
                 clear_screen(1)

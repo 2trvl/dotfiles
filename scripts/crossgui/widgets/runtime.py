@@ -11,18 +11,59 @@ manual choice of environment: terminal, dmenu
 (supported by dmenu, rofi) and qt
 
 '''
+import enum
 import functools
-import os
 import platform
+import sys
 
-USE_DMENU = os.environ.get("USE_DMENU", "False") == "True"
+from shutil import which
+
+
+class Environment(enum.IntEnum):
+    Dmenu = enum.auto()
+    Qt = enum.auto()
+    Rofi = enum.auto()
+    Terminal = enum.auto()
+    Undefined = enum.auto()
+
+graphics = Environment.Undefined
+
+def use_graphics(environment: Environment):
+    '''
+    Change environment manually
+
+    Args:
+        graphics (Environment): GUI choice
+    '''
+    global graphics
+    graphics = environment
+
+def _use_available_graphics():
+    '''
+    Search for graphics available on the device
+    and select it to display widgets
+    
+    This function is called automatically
+    if use_graphics() was not called before
+    displaying first widget
+    '''
+    global graphics
+
+    if sys.stdin and sys.stdin.isatty():
+        graphics = Environment.Terminal
+    elif which("dmenu") is not None:
+        graphics = Environment.Dmenu
+    elif which("rofi") is not None:
+        graphics = Environment.Rofi
+    else:
+        graphics = Environment.Qt
 
 
 @functools.cache
 def WINDOWS_VT_MODE() -> bool:
     '''
-    Determines if ANSI escape codes
-    are available or Windows API needed
+    Determines if Windows API needed
+    or ANSI escape codes are available
 
     Starting from Windows 10 TH2 (v1511),
     cmd.exe support ANSI Escape Sequences,

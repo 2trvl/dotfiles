@@ -14,7 +14,7 @@ Replaces colorama and is successor of
 '''
 import os
 
-from .environment import WINDOWS_VT_MODE
+from .runtime import WINDOWS_VT_MODE
 
 
 if os.name == "nt":
