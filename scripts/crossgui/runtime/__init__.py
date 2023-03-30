@@ -52,9 +52,9 @@ def _use_available_graphics():
 
     if sys.stdin and sys.stdin.isatty():
         graphics = Environment.Terminal
-    elif which("dmenu") is not None:
+    elif sys.platform != "win32" and which("dmenu") is not None:
         graphics = Environment.Dmenu
-    elif which("rofi") is not None:
+    elif sys.platform != "win32" and which("rofi") is not None:
         graphics = Environment.Rofi
     else:
         graphics = Environment.Qt

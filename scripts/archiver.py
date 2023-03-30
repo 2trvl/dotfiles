@@ -27,7 +27,7 @@ import charset_normalizer
 
 from common import run_as_admin
 from crossgui.widgets import ProgressBar
-from crossgui.widgets.terminal import clear_screen
+from crossgui.runtime.terminal import clear_screen
 
 
 class ArchiveFile():

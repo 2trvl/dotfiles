@@ -13,11 +13,10 @@ colorama and is successor of 2trvl/xamalk
 
 '''
 import functools
-import os
 import platform
 
 
-if os.name == "nt":
+if platform.system() == "Windows":
     import ctypes
     from ctypes import wintypes
 
@@ -46,7 +45,7 @@ def clear_screen(rows: int) -> bool:
         bool: If function succeeds, the
         return value is True
     '''
-    if os.name != "nt":
+    if platform.system() != "Windows":
         print(f"\033[{rows}A \033[0J", end="\r")
         return True
 
@@ -105,8 +104,6 @@ def WINDOWS_VT_MODE() -> bool:
 
         if version < (10, 0, 10586):
             return True
-
-        import ctypes
 
         STD_OUTPUT_HANDLE = -11
         INVALID_HANDLE_VALUE = -1
