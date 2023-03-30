@@ -9,9 +9,9 @@ Copyright (c) 2023 Andrew Shteren
 Create yes/no dialog and get answer back
 
 '''
-from . import runtime
-from .runtime import Environment
-from .terminal import clear_screen
+from .. import runtime
+from ..runtime import Environment
+from ..runtime.terminal import clear_screen
 
 
 def _show_terminal_dialog(question: str) -> bool | None:

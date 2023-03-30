@@ -10,9 +10,9 @@ Create a menu with a choice of one or
 multiple options
 
 '''
-from . import runtime
-from .runtime import Environment
-from .terminal import clear_screen
+from .. import runtime
+from ..runtime import Environment
+from ..runtime.terminal import clear_screen
 
 
 def _show_terminal_menu(

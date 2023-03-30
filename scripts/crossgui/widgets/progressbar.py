@@ -14,7 +14,10 @@ import multiprocessing
 import threading
 import time
 
-from .terminal import change_cursor_visibility, clear_screen
+from ..runtime.terminal import (
+    change_cursor_visibility,
+    clear_screen
+)
 
 
 class ProgressBar():

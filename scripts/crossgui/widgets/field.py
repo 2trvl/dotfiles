@@ -11,9 +11,9 @@ Create generic or password input field
 '''
 from typing import TypeVar
 
-from . import runtime
-from .runtime import Environment
-from .terminal import clear_screen
+from .. import runtime
+from ..runtime import Environment
+from ..runtime.terminal import clear_screen
 
 T = TypeVar('T')
 
