@@ -23,7 +23,6 @@ from urllib.request import urlretrieve
 
 import pyexiv2
 import vk_api
-
 from crossgui.widgets import show_menu
 
 parser = argparse.ArgumentParser(description="Vk Album Downloader")

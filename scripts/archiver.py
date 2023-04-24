@@ -24,10 +24,7 @@ from operator import attrgetter
 from typing import IO, Iterator
 
 import charset_normalizer
-
-from common import run_as_admin
 from crossgui.widgets import ProgressBar
-from crossgui.runtime.terminal import clear_screen
 
 
 class ArchiveFile():
@@ -39,8 +36,7 @@ class ArchiveFile():
         preferredEncoding: str,
         ignore: list[str],
         progressbar: bool,
-        useBarPrefix: bool,
-        clearBarAfterFinished: bool
+        useBarPrefix: bool
     ):
         self.latestCharset = None
         self.preferredEncoding = preferredEncoding
@@ -58,7 +54,6 @@ class ArchiveFile():
             self._create_progressbar("__init__")
 
         self.useBarPrefix = useBarPrefix
-        self.clearBarAfterFinished = clearBarAfterFinished
 
     def _create_progressbar(self, ownerName: str):
         '''
@@ -122,8 +117,6 @@ class ArchiveFile():
             with self.finished.get_lock():
                 self.finished.value = True
             self.renderingProcess.join()
-            if self.clearBarAfterFinished:
-                clear_screen(1)
             self._reset_progressbar()
 
     def is_ignored(self, path: str) -> bool:
@@ -245,8 +238,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         overwriteDuplicates: bool = False,
         symlinksToFiles: bool = False,
         progressbar: bool = False,
-        useBarPrefix: bool = True,
-        clearBarAfterFinished: bool = False
+        useBarPrefix: bool = True
     ):
         '''
         Better ZipFile with proper names and symlinks encoding & progressbar
@@ -285,9 +277,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 running or not. Defaults to False.
             useBarPrefix (bool, optional): Show progress bar prefix, disable
                 this option if your program itself prints events to the terminal.
-                Defaults to True
-            clearBarAfterFinished (bool, optional): Clears progress bar after it's
-                finished. Defaults to False
+                Defaults to True.
 
         If you use progressbar option on Windows - run your code in the
         "if __name__ == '__main__'" statement
@@ -297,8 +287,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             preferredEncoding=preferredEncoding,
             ignore=ignore,
             progressbar=progressbar,
-            useBarPrefix=useBarPrefix,
-            clearBarAfterFinished=clearBarAfterFinished
+            useBarPrefix=useBarPrefix
         )
 
         super().__init__(
@@ -1068,12 +1057,6 @@ if __name__ == "__main__":
         help="replace symbolic links with the files they point"
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_false",
-        help="don't clear progress bar after finished"
-    )
-    parser.add_argument(
         "-l",
         "--list",
         action="store_true",
@@ -1087,6 +1070,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    try:
+        from common import run_as_admin
+    except ModuleNotFoundError:
+        def run_as_admin():
+            print("Make sure you run this script as administrator")
+
     if args.write or os.path.exists(args.filepath):
         with ZipFile(
             file=args.filepath,
@@ -1095,8 +1084,7 @@ if __name__ == "__main__":
             ignore=args.ignore,
             overwriteDuplicates=args.overwrite_duplicates,
             symlinksToFiles=args.symlinks_to_files,
-            progressbar=True,
-            clearBarAfterFinished=args.verbose
+            progressbar=True
         ) as zip:
             if args.extract:
                 #  on windows users need "create symbolic links" rights

@@ -17,7 +17,6 @@ import argparse
 import os
 
 import yt_dlp
-
 from crossgui.widgets import show_menu
 
 parser = argparse.ArgumentParser(

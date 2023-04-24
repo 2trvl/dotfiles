@@ -21,9 +21,34 @@ import tempfile
 from itertools import filterfalse
 from typing import IO
 
-from archiver import ZipFile
-from common import run_as_admin
 from crossgui.widgets import ProgressBar
+
+try:
+    from archiver import ZipFile
+except ModuleNotFoundError:
+    import zipfile
+    class ZipFile(zipfile.ZipFile):
+        def __init__(
+            self,
+            *args,
+            preferredEncoding = "cp437",
+            ignore = [],
+            overwriteDuplicates = False,
+            symlinksToFiles = False,
+            progressbar = True,
+            useBarPrefix = True,
+            **kwargs
+        ):
+            super().__init__(*args, **kwargs)
+
+if ZipFile.__module__ == "archiver":
+    try:
+        from common import run_as_admin
+    except ModuleNotFoundError:
+        def run_as_admin():
+            print("Make sure you run this script as administrator")
+else:
+    run_as_admin = lambda: None
 
 if os.name == "nt":
     import ctypes
