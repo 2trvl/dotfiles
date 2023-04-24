@@ -27,7 +27,7 @@ def _show_terminal_menu(
     return _parse_menu_selection(selection, index)
 
 
-def _show_dmenu_menu(prompt: str, items: list[str]) -> set[int]:
+def _show_rofi_menu(prompt: str, items: list[str]) -> set[int]:
     return set()
 
 
@@ -79,8 +79,8 @@ def show_menu(prompt: str, items: list[str]) -> set[int]:
 
     while True:
         try:
-            if runtime.graphics is Environment.Dmenu:
-                return _show_dmenu_menu(prompt, items)
+            if runtime.graphics is Environment.Rofi:
+                return _show_rofi_menu(prompt, items)
             elif runtime.graphics is Environment.Terminal:
                 return _show_terminal_menu(prompt, items)
         except ValueError:

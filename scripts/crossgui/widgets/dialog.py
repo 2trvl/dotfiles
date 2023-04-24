@@ -19,7 +19,7 @@ def _show_terminal_dialog(question: str) -> bool | None:
     return _parse_dialog_answer(answer)
 
 
-def _show_dmenu_dialog(question: str) -> bool | None:
+def _show_rofi_dialog(question: str) -> bool | None:
     return False
 
 
@@ -60,8 +60,8 @@ def show_dialog(question: str) -> bool:
         runtime._use_available_graphics()
 
     while True:
-        if runtime.graphics is Environment.Dmenu:
-            answer = _show_dmenu_dialog(question)
+        if runtime.graphics is Environment.Rofi:
+            answer = _show_rofi_dialog(question)
             if answer is None:
                 continue
         elif runtime.graphics is Environment.Terminal:

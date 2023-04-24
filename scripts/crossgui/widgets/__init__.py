@@ -7,7 +7,7 @@ Copyright (c) 2022 Andrew Shteren
              Widgets For Scripts             
 ---------------------------------------------
 Dialog, input or options menu in a terminal,
-dmenu, rofi or qt. Progress bar for an
+rofi, qt and more. Progress bar for an
 unknown process time
 
 '''

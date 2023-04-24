@@ -22,7 +22,7 @@ def _show_terminal_input(prompt: str, valueType: T) -> T:
     return valueType(input(f"{prompt}:\n> "))
 
 
-def _show_dmenu_input(prompt: str, valueType: T) -> T:
+def _show_rofi_input(prompt: str, valueType: T) -> T:
     return valueType()
 
 
@@ -42,8 +42,8 @@ def show_input(prompt: str, valueType: T) -> T:
 
     while True:
         try:
-            if runtime.graphics is Environment.Dmenu:
-                return _show_dmenu_input(prompt, valueType)
+            if runtime.graphics is Environment.Rofi:
+                return _show_rofi_input(prompt, valueType)
             elif runtime.graphics is Environment.Terminal:
                 return _show_terminal_input(prompt, valueType)
         except ValueError:

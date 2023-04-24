@@ -6,10 +6,8 @@ Copyright (c) 2023 Andrew Shteren
 ---------------------------------------------
             Terminal Specific Code           
 ---------------------------------------------
-Clear screen, open alternate screen buffer,
-print with color, move and hide cursor.
-Windows terminal ANSI codes support. Replaces
-colorama and is successor of 2trvl/xamalk
+Clear screen, show and hide cursor. Windows
+terminal ANSI codes support.
 
 '''
 import functools
@@ -138,6 +136,7 @@ def WINDOWS_VT_MODE() -> bool:
         atexit.register(disable_vt_processing)
 
     return False
+
 
 if not WINDOWS_VT_MODE():
     #  ANSI escape sequences

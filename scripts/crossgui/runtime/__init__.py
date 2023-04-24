@@ -7,7 +7,7 @@ Copyright (c) 2022 Andrew Shteren
           Environment Determination          
 ---------------------------------------------
 Auto and manual choice of environment:
-terminal, dmenu, rofi and qt
+terminal, rofi, qt and more
 
 '''
 __all__ = ("terminal", "Environment", "use_graphics")
@@ -19,7 +19,6 @@ from shutil import which
 
 
 class Environment(enum.IntEnum):
-    Dmenu = enum.auto()
     Qt = enum.auto()
     Rofi = enum.auto()
     Terminal = enum.auto()
@@ -52,8 +51,6 @@ def _use_available_graphics():
 
     if sys.stdin and sys.stdin.isatty():
         graphics = Environment.Terminal
-    elif sys.platform != "win32" and which("dmenu") is not None:
-        graphics = Environment.Dmenu
     elif sys.platform != "win32" and which("rofi") is not None:
         graphics = Environment.Rofi
     else:
