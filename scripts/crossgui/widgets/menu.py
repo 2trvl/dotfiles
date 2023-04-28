@@ -20,7 +20,7 @@ def _show_terminal_menu(
     items: list[str],
     one: bool = False,
     indentSize: int = 2
-) -> set[int]:
+) -> list[int]:
     print(prompt)
 
     for index, item in enumerate(items):
@@ -34,15 +34,15 @@ def _show_rofi_menu(
     prompt: str,
     items: list[str],
     one: bool = False
-) -> set[int]:
-    return set()
+) -> list[int]:
+    return []
 
 
 def _parse_menu_selection(
     selection: str,
     maxValue: int,
     one: bool
-) -> set[int]:
+) -> list[int]:
     '''
     Parses menu selection
 
@@ -54,8 +54,8 @@ def _parse_menu_selection(
             only one option or not
 
     Returns:
-        set[int]: Set of selected options
-            {0, 1, 2}
+        list[int]: List of selected options
+            [0, 1, 2]
     '''
     selection = selection.split(",")
     indexes = set()
@@ -75,15 +75,15 @@ def _parse_menu_selection(
 
     if one and len(indexes) != 1:
         raise ValueError
-
-    return indexes
+    
+    return sorted(indexes)
 
 
 def show_menu(
     prompt: str,
     items: list[str],
     one: bool = False
-) -> set[int]:
+) -> list[int]:
     '''
     Displays a menu based on runtime.graphics
 
