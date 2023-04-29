@@ -81,14 +81,20 @@ if [ -f "$filepath/.env" ]; then
     export $(grep -v "^#" "$filepath/.env" | xargs -d "\n")
 fi
 
-script="$1"
-shift
-
-if [ -z "$script" ]; then
-    echo "Specify the script to be executed"
-elif [ ! -f "$filepath/$script" ]; then
-    echo "No script named \"$script\""
+if [ -z "$1" ]; then
+    if [ -f "$filepath/__main__.py" ]; then
+        python "$filepath/__main__.py" "/tmp/getscript.tmp"
+        script="$(cat /tmp/getscript.tmp)"
+        rm "/tmp/getscript.tmp"
+        "$0" "$script"
+    else
+        echo "Specify the script to be executed"
+    fi
+elif [ ! -f "$filepath/$1" ]; then
+    echo "No script named \"$1\""
 else
+    script="$1"
+    shift
     python "$filepath/$script" "$@"
     if [ $? -eq 126 ]; then
         eval "pkexec env $(env | awk -F '=' '{if (NR!="1") printf " "; printf $1 "='\''"; for (i=2; i<NF; i++) printf $i "="; printf $NF "'\''"}') python '$filepath/$script' '$@'"
