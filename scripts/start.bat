@@ -6,7 +6,8 @@
 : #
 : # Loads environment variables from .env file if it exists
 : #
-: # Requests administrator rights if needed, polkit is used in linux
+: # Requests administrator rights if needed, Polkit is used in Linux
+: # VBScript in Windows and AppleScript in OS X
 : # Python interpreter has only two standard codes 0 and 1
 : # But you can set the exit code manually with sys.exit
 : # Use code 126 to have start.bat restart script with admin rights
@@ -35,7 +36,14 @@
     )
 
     if "%~1"=="" (
-        echo Specify the script to be executed
+        if exist "%filepath%__main__.py" (
+            python "%filepath%__main__.py" "%temp%\getscript.tmp"
+            set /p script=<"%temp%\getscript.tmp"
+            del "%temp%\getscript.tmp"
+            "%~f0" !script!
+        ) else (
+            echo Specify the script to be executed
+        )
     ) else (
         if not exist "%filepath%%~1" (
             echo No script named "%1"
