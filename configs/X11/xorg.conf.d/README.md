@@ -125,6 +125,30 @@ blacklist nouveau
 options nouveau modeset=0
 ```
 
+# Use an open source nvidia driver
+
+Nvidia is phasing out driver support for older graphics cards. Support for linux 390 driver ended at the end of 2022. Therefore, your graphics card may not be officially supported by the current version of Xorg.
+
+There may be several solutions here:
+1) Use old versions of stable distributions
+2) Use an open source driver
+
+Consider option 2. This is suitable if you don't play games, don't edit videos, etc. Because the loss in performance and features compared to a proprietary driver is significant.
+
+Install nouveau driver:
+```
+pacman -S xf86-video-nouveau
+```
+
+Add nouveau kernel module to initframs:
+```
+MODULES=(nouveau)
+```
+
+Rebuild initframs. 
+
+This is usually all, kernel parameters and xorg.conf don't need to be configured.
+
 # Disable intel, use nvidia only
 
 Add the following commands to your xinitrc

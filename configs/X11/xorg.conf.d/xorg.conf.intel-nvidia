@@ -49,5 +49,5 @@ Section "OutputClass"
 EndSection
 ​
 Section "ServerFlags"
-    Option         "IgnoreABI" "1"
+    Option         "IgnoreABI" "true"
 EndSection

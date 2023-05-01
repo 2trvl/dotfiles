@@ -341,7 +341,7 @@ for index ({1..9}) alias "$index"="cd +${index}"; unset index
 # other options
 setopt auto_cd                   # cd by typing directory name
 setopt extended_glob             # treat the '#', '~' and '^' characters as part of patterns
-setopt nomatch                   # save argument in history despite no match
+setopt nomatch                   # leave globbing expressions which don't match anything as-is
 setopt notify                    # report the status of background jobs immediately
 setopt numeric_glob_sort         # sort filenames numerically when it makes sense
 
