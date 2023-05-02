@@ -6,7 +6,15 @@
 #                                                         
 
 # path
-export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
+add_to_path() {
+    [ -d "$1" ] || return 1
+    
+    if ! $(echo "$PATH" | tr ":" "\n" | grep -qx "$1"); then
+        export PATH="$PATH:$1"
+    fi
+}
+add_to_path "$HOME/.local/bin"
+add_to_path "$HOME/.cargo/bin"
 
 # xdg vars
 export XDG_CACHE_HOME="$HOME/.cache"
@@ -24,6 +32,16 @@ export TERM=xterm-256color
 export BROWSER=firefox
 export EDITOR=nano
 export VISUAL=micro
+
+# pager setup
+export PAGER='less'
+less_opts=(
+    -FX                     # quit if entire file fits on first screen
+    --ignore-case           # ignore case in searches that do not contain uppercase
+    --RAW-CONTROL-CHARS     # allow ANSI colour escapes, but no other escapes
+    --dumb                  # do not complain when we are on a dumb terminal
+)
+export LESS="${less_opts[*]}"
 
 # nnn setup
 export NNN_BMS="h:$HOME;d:$HOME/Downloads;t:$XDG_DATA_HOME/Trash"
