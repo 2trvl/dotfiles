@@ -14,6 +14,7 @@ fi
 
 # close autostart apps
 pkill -u $_user_id -f sxhkd
+pkill -u $_user_id -f picom
 pkill -u $_user_id -f polybar
 pkill -u $_user_id -f xss-lock
 pkill -u $_user_id -f joystickwake

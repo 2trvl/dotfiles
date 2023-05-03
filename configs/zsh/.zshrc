@@ -368,14 +368,15 @@ alias duall='du -cksh *'
 
 # load scripts
 if [ -d "$HOME/scripts" ]; then
-    for pyScript in "$HOME/scripts"/*.py~(*widgets.py|*common.py); do
-        pyScript=$(basename $pyScript)
+    for pyScript in "$HOME/scripts"/*.py~(*__main__.py|*common.py); do
+        pyScript="$(basename -- $pyScript)"
         alias ${pyScript::-3}="$HOME/scripts/start.bat $pyScript"
     done
     unset pyScript
+    alias start="$HOME/scripts/start.bat __main__.py"
 
     for shellScript in "$HOME/scripts"/*.sh; do
-        shellScript=$(basename $shellScript)
+        shellScript="$(basename -- $shellScript)"
         alias ${shellScript::-3}="$HOME/scripts/$shellScript"
     done
     unset shellScript

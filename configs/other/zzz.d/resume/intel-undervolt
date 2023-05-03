@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# apply intel-undervolt after suspend
+
+case $ZZZ_MODE in
+    suspend|hibernate)
+        intel-undervolt apply --trigger
+        exit $?
+        ;;
+    *)
+        exit 0
+        ;;
+esac

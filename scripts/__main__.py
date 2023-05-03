@@ -36,7 +36,7 @@ if __name__ == "__main__":
     scriptsFolder = os.path.abspath(__file__)
     scriptsFolder = os.path.dirname(scriptsFolder)
 
-    for root, dirs, files in os.walk(os.curdir, topdown=True):
+    for root, dirs, files in os.walk(scriptsFolder, topdown=True):
         dirs[:] = set(dirs) - ignore["dirs"]
         files = set(files) - ignore["files"]
         

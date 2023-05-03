@@ -1,5 +1,6 @@
 #!/bin/zsh
 
+# restart app with logging
 _restart() {
     pkill -u $UID -f "$1"
     
@@ -7,9 +8,21 @@ _restart() {
         sleep 0.1
     done
     
-    nohup "$@" >/dev/null 2>&1 &
+    if [ "$@[-1]" = "--" ]; then
+        if [ -f "$1" ]; then
+            _log="/tmp/$(basename -- $1).log"
+        else
+            _log="/tmp/$1.log"
+        fi
+        set -- "${@:1:-1}"
+    else
+        _log="/dev/null"
+    fi
+    
+    nohup "$@" >$_log 2>&1 &
 }
 
+# wait for window with name
 _wait_window() {
     while true; do
         _window_id=$(bspc query -N -n newest)
@@ -26,8 +39,11 @@ _wait_window() {
 # keyboard
 _restart sxhkd
 
+# compositor
+_restart /usr/local/bin/picom --
+
 # menu bar
-_restart polybar 2trvl
+_restart polybar 2trvl --
 
 # wallpaper
 feh --bg-fill "$HOME/Pictures/Wallpapers/Kamchatka_Blue.jpg"
@@ -36,16 +52,16 @@ feh --bg-fill "$HOME/Pictures/Wallpapers/Kamchatka_Blue.jpg"
 xsetroot -cursor_name left_ptr
 
 # lockscreen
-_restart xss-lock -- betterlockscreen -l
+_restart xss-lock -- betterlockscreen -l dim
 
 # don't blank screen when using joystick
-_restart /usr/local/bin/joystickwake --cooldown 555 --loglevel error
+_restart /usr/local/bin/joystickwake --cooldown 555 --loglevel info --
 
 # forward media control from bluetooth headset
 _restart mpris-proxy
 
 # enable file transfer via bluetooth
-_restart /usr/libexec/bluetooth/obexd -r "$HOME/Downloads" -l -a
+_restart /usr/libexec/bluetooth/obexd -n -r "$HOME/Downloads" -l -a --
 
 # mate polkit agent
 _restart /usr/libexec/polkit-mate-authentication-agent-1

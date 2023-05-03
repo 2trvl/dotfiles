@@ -4,7 +4,7 @@
 | 🍱 Window Manager       | [BSPWM](bspwm/)                                         |
 | 🚀 Application Launcher | rofi                                                    |
 | 🚧 Bar                  | [polybar](polybar/)                                     |
-| ⌛ Compositor           | picom                                                   |
+| ⌛ Compositor           | [picom](picom/picom.conf)                               |
 | 🗿 Display Server       | [X11](X11/)                                             |
 | ♟️ File Manager         | [nnn](zsh/.zshenv)                                      |
 | 🔒 Lockscreen           | [betterlockscreen](betterlockscreen/betterlockscreenrc) |
