@@ -1,6 +1,16 @@
 #!/bin/sh
 
 # apply intel-undervolt after suspend
+#
+# to apply intel-undervolt at startup
+# just create a simple runit service
+# /etc/sv/intel-undervolt/run
+# with content: "intel-undervolt daemon"
+# this will apply the config once
+#
+# after that, intel-undervolt state
+# will be maintained by this hook
+# make it executable if you need it
 
 case $ZZZ_MODE in
     suspend|hibernate)
