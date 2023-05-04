@@ -21,6 +21,7 @@ pkill -u $_user_id -f joystickwake
 pkill -u $_user_id -f mpris-proxy
 pkill -u $_user_id -f obexd
 pkill -u $_user_id -f polkit-mate-authentication-agent-1
+pkill -u $_user_id -f copyq
 pkill -u $_user_id -f redshift
 
 # quit bspwm

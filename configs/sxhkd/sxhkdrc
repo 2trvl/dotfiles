@@ -27,6 +27,10 @@ super + t
 super + space
     rofi -show drun
 
+# clipboard manager
+super + v
+    copyq toggle
+
 # screenshot
 Print
     flameshot gui --clipboard --path ~/Pictures/Screenshots

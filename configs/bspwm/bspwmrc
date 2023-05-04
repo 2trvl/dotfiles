@@ -36,6 +36,7 @@ bspc rule -a kdenlive desktop=1 state=fullscreen follow=on
 bspc rule -a pcsx2-qt desktop=5 state=fullscreen follow=on
 bspc rule -a feh state=floating
 bspc rule -a mpv state=floating
+bspc rule -a copyq state=floating
 
 # external rules for complex window names
 bspc config external_rules_command "$XDG_CONFIG_HOME/bspwm/external_rules"

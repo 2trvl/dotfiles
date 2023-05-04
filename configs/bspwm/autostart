@@ -66,6 +66,9 @@ _restart /usr/libexec/bluetooth/obexd -n -r "$HOME/Downloads" -l -a --
 # mate polkit agent
 _restart /usr/libexec/polkit-mate-authentication-agent-1
 
+# clipboard manager
+_restart copyq
+
 # rest break reminders
 _restart workrave
 _wait_window workrave
