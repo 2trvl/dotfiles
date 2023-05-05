@@ -28,6 +28,7 @@ super + space
     rofi -show drun
 
 # clipboard manager
+# file->preferences->layout: enable "hide main window"
 super + v
     copyq toggle
 
@@ -139,20 +140,22 @@ super + l
 
 # shutdown
 super + shift + p
-    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mPoweroff::Auth\033[38;5;231m'; su -c '$HOME/.config/bspwm/shutdown $UID && poweroff'"
+    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mPoweroff::Auth\033[38;5;231m\033[?25l'; pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY nohup sh -c '$HOME/.config/bspwm/shutdown $PKEXEC_UID && poweroff'"
 
 # reboot
 super + shift + r
-    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mReboot::Auth\033[38;5;231m'; su -c '$HOME/.config/bspwm/shutdown $UID && reboot'"
+    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mReboot::Auth\033[38;5;231m\033[?25l'; pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY nohup sh -c '$HOME/.config/bspwm/shutdown $PKEXEC_UID && reboot'"
 
 # sleep
 super + shift + s
-    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mSleep::Auth\033[38;5;231m'; su -c 'zzz -z || systemctl suspend'"
+    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mSleep::Auth\033[38;5;231m\033[?25l'; pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY sh -c 'zzz -z || systemctl suspend'"
 
 # hibernate
+# doesn't work without swap
 super + shift + h
-    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mHibernate::Auth\033[38;5;231m'; su -c 'zzz -Z || systemctl hibernate'"
+    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mHibernate::Auth\033[38;5;231m\nMake sure you have swap before continuing\033[?25l'; pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY sh -c 'zzz -Z || systemctl hibernate'"
 
 # hybrid sleep
+# use with swap partition or file
 super + shift + ctrl + s
-    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mHybridSleep::Auth\033[38;5;231m'; su -c 'zzz -H || systemctl hybrid-sleep'"
+    kitty -o font_size=15 --start-as=fullscreen zsh -c "echo -e '\033[38;5;226mHybridSleep::Auth\033[38;5;231m\nMake sure you have swap before continuing\033[?25l'; pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY sh -c 'zzz -H || systemctl hybrid-sleep'"
