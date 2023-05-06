@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# openweather api key
+# you can obtain it here
+# https://home.openweathermap.org/api_keys
+API_KEY=""
+
+# latitude and longitude
+# leave empty to determine
+# location automatically
+LATITUDE=""
+LONGITUDE=""
+
+# "standard" for kelvin
+# "metric" for celsius
+# "imperial" for fahrenheit
+UNITS="metric"
+
+# two-letter language code
+# leave empty to use system language
+# if your language isn't supported, "en" will be used
+LANGUAGE_CODE=""
+
+if [ -z "$API_KEY" ]; then
+    echo "API_KEY"
+    exit 0
+elif [ -z "$LATITUDE" ] || [ -z "$LONGITUDE" ]; then
+    location=$(curl -sf "https://location.services.mozilla.com/v1/geolocate?key=geoclue")
+    
+    if [ -z "$location" ]; then
+        echo "LOCATION"
+        exit 0
+    fi
+    
+    LATITUDE=$(echo "$location" | jq ".location.lat")
+    LONGITUDE=$(echo "$location" | jq ".location.lng")
+fi
+
+if [ -z "$LANGUAGE_CODE" ]; then
+    LANGUAGE_CODE=$(locale | awk -F '=' '/LANG/ {printf substr($2,1,2)}')
+fi
+
+weather=$(curl -sf "https://api.openweathermap.org/data/2.5/weather?appid=$API_KEY&lat=$LATITUDE&lon=$LONGITUDE&units=$UNITS&lang=$LANGUAGE_CODE")
+
+if [ -z "$weather" ]; then
+    echo "API_CALL"
+    exit 0
+else
+    temperature=$(echo "$weather" | jq ".main.temp" | cut -d '.' -f 1)
+    icon=$(echo "$weather" | jq -r ".weather[0].icon")
+fi
+
+case $icon in
+    01d) icon=" " ;;
+    01n) icon=" " ;;
+    02d) icon=" " ;;
+    02n) icon=" " ;;
+    03*) icon=" " ;;
+    04*) icon=" " ;;
+    09d) icon=" " ;;
+    09n) icon=" " ;;
+    10d) icon=" " ;;
+    10n) icon=" " ;;
+    11d) icon=" " ;;
+    11n) icon=" " ;;
+    13*) icon=" " ;;
+    50*) icon=" " ;;
+esac
+
+case $1 in
+    --format) echo "%{T$2}$icon %{T-}$temperature°" ;;
+    *) echo "$icon $temperature°" ;;
+esac
