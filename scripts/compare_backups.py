@@ -41,17 +41,17 @@ except ModuleNotFoundError:
         ):
             super().__init__(*args, **kwargs)
 
-if ZipFile.__module__ == "archiver":
-    try:
-        from common import run_as_admin
-    except ModuleNotFoundError:
-        def run_as_admin():
-            print("Make sure you run this script as administrator")
-else:
-    run_as_admin = lambda: None
-
 if os.name == "nt":
     import ctypes
+
+    if ZipFile.__module__ == "archiver":
+        try:
+            from common import run_as_admin
+        except ModuleNotFoundError:
+            def run_as_admin():
+                print("Make sure you run this script as administrator")
+    else:
+        run_as_admin = lambda: None
 
 
 class DirCmpUtils():

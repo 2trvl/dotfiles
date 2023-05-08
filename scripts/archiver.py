@@ -1070,12 +1070,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    try:
-        from common import run_as_admin
-    except ModuleNotFoundError:
-        def run_as_admin():
-            print("Make sure you run this script as administrator")
-
     if args.write or os.path.exists(args.filepath):
         with ZipFile(
             file=args.filepath,
@@ -1091,6 +1085,11 @@ if __name__ == "__main__":
                 #  to create a symlink. by default, normal users don't have it
                 #  but administrator does
                 if os.name == "nt":
+                    try:
+                        from common import run_as_admin
+                    except ModuleNotFoundError:
+                        def run_as_admin():
+                            print("Make sure you run this script as administrator")
                     run_as_admin()
 
                 if "/" in args.extract:
