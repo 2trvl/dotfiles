@@ -10,7 +10,7 @@ Scans subdirectories, finds all Python
 scripts and executes the source code of the
 selected one. Pass as an argument path to a
 temporary file for writing the selected
-script, rather than executing it
+script name, rather than executing it
 
 '''
 if __name__ == "__main__":

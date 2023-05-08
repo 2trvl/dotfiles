@@ -46,7 +46,42 @@
         )
     ) else (
         if not exist "%filepath%%~1" (
+            if /i "%~1"=="-u" (
+                goto upgrade
+            )
+            if /i "%~1"=="--upgrade" (
+                goto upgrade
+            )
+            if /i "%~1"=="-h" (
+                goto help
+            )
+            if /i "%~1"=="--help" (
+                goto help
+            )
+            goto script-not-found
+
+            :upgrade
+            python -m pip install --upgrade pip
+            pip install -r "%filepath%requirements.txt" --upgrade --use-pep517
+            goto exit
+
+            :help
+            echo|set /p dumb="Usage: start.bat [script [arguments..]] [-u | -h]" & echo:
+            echo:
+            echo:Python Virtual Environment Utility
+            echo:
+            echo|set /p dumb="Positional arguments:" & echo:
+            echo:script           script path in the utility folder
+            echo:arguments        arguments of the script to run
+            echo:
+            echo|set /p dumb="Utility options (used when not running scripts):" & echo:
+            echo:-u, --upgrade    update outdated dependencies
+            echo:-h, --help       show this help message and exit
+            goto exit
+            
+            :script-not-found
             echo No script named "%1"
+            goto exit
         ) else (
             set args=%*
             call set args=%%args:*%1=%%
@@ -60,6 +95,7 @@
         )
     )
 
+    :exit
     deactivate
     endlocal
     exit /b
@@ -93,6 +129,7 @@ if [ -z "$1" ]; then
 elif [ ! -f "$filepath/$1" ]; then
     case $1 in
         -u|--upgrade)
+            python -m pip install --upgrade pip
             pip install -r "$filepath/requirements.txt" --upgrade --use-pep517
             ;;
         -h|--help)
