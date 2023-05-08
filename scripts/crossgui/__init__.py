@@ -6,7 +6,8 @@ Copyright (c) 2023 Andrew Shteren
 ---------------------------------------------
                    Crossgui                  
 ---------------------------------------------
-Set of widgets that you can always expand
+Modular interface concept. Set of widgets
+with multiple graphical implementations
 
 '''
 __all__ = ("runtime", "widgets")
