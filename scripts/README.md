@@ -13,7 +13,7 @@ See header of the script file for information.
 
 *\* - not executable*
 
-Also for arguments and more information call:
+For arguments and more information call:
 ```
 start.bat script.py --help
 ```
@@ -21,4 +21,9 @@ start.bat script.py --help
 Or just run to select script from menu:
 ```
 start.bat
+```
+
+If you suddenly start getting errors, script dependencies may be out of date. You can update them with command:
+```
+start.bat --upgrade
 ```

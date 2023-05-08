@@ -40,7 +40,7 @@
             python "%filepath%__main__.py" "%temp%\getscript.tmp"
             set /p script=<"%temp%\getscript.tmp"
             del "%temp%\getscript.tmp"
-            "%~f0" !script!
+            "%~f0" "!script!"
         ) else (
             echo Specify the script to be executed
         )
@@ -65,7 +65,7 @@
     exit /b
 ::Batch
 
-filepath="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
+filepath=$(cd -- $(dirname "$0") >/dev/null 2>&1; pwd -P)
 
 if [ ! -d "$filepath/venv" ]; then
     printf "\033[?25lFirst run, creating a virtual environment..\r"
@@ -83,15 +83,35 @@ fi
 
 if [ -z "$1" ]; then
     if [ -f "$filepath/__main__.py" ]; then
-        python "$filepath/__main__.py" "/tmp/getscript.tmp"
-        script="$(cat /tmp/getscript.tmp)"
-        rm "/tmp/getscript.tmp"
+        python "$filepath/__main__.py" /tmp/getscript.tmp
+        script=$(cat /tmp/getscript.tmp)
+        rm /tmp/getscript.tmp
         "$0" "$script"
     else
         echo "Specify the script to be executed"
     fi
 elif [ ! -f "$filepath/$1" ]; then
-    echo "No script named \"$1\""
+    case $1 in
+        -u|--upgrade)
+            pip install -r "$filepath/requirements.txt" --upgrade --use-pep517
+            ;;
+        -h|--help)
+            echo "Usage: start.bat [script [arguments..]] [-u | -h]"
+            echo
+            echo "Python Virtual Environment Utility"
+            echo
+            echo "Positional arguments:"
+            echo "script           script path in the utility folder"
+            echo "arguments        arguments of the script to run"
+            echo
+            echo "Utility options (used when not running scripts):"
+            echo "-u, --upgrade    update outdated dependencies"
+            echo "-h, --help       show this help message and exit"
+            ;;
+        *)
+            echo "No script named \"$1\""
+            ;;
+    esac
 else
     script="$1"
     shift
