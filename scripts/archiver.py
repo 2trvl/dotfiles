@@ -15,6 +15,7 @@ So far only supports .zip
 
 '''
 import hashlib
+import inspect
 import itertools
 import multiprocessing
 import os
@@ -51,26 +52,110 @@ class ArchiveFile():
             self.unit = multiprocessing.Array("c", 6)
             self.unit.value = b"files"
             self.finished = multiprocessing.Value("b", False)
-            self._create_progressbar("__init__")
+            self._create_progressbar(0)
 
         self.useBarPrefix = useBarPrefix
 
-    def _create_progressbar(self, ownerName: str):
+    def _get_caller_name(self, depth: int = 1) -> str:
+        '''
+        Get caller name
+        Relies on CPython implementation to achieve the best performance.
+        So it may not work on other language implementations
+        Use inspect.stack()[1][3]
+
+        Args:
+            depth(int): Caller name number on the stack to extract.
+                Defaults 1.
+
+        Returns:
+            str: Caller name of specified depth
+        '''
+        frame = inspect.currentframe()
+        for _ in range(depth):
+            frame = frame.f_back
+        return frame.f_code.co_name
+    
+    def _get_call_stack(self) -> list[str]:
+        '''
+        Get call stack
+        Alternative to calling get_caller_name() with
+        different depth values
+
+        Returns:
+            list[str]: Caller names, chronologically ordered
+        '''
+        frame = inspect.currentframe()
+        callstack = [frame.f_code.co_name]
+
+        while True:
+            callstack.insert(0, frame.f_back.f_code.co_name)
+            if callstack[0] == "<module>":
+                break
+            frame = frame.f_back
+        
+        return callstack
+
+    def _create_progressbar(self, depth: int = 1):
         '''
         Create progress bar
         Because we cannot restart a terminated process.
         We need to instantiate a new.
 
+        During creation, name of the owner is recorded.
+        This is an additional protection against updating and
+        finishing the progress bar with other functions.
+
+        Owner can determine nesting level of subtasks
+        that are allowed to change progressbar parameters.
+
+        See _check_owner_permission() for details
+
+        TODO: set owner by function reference
+
         Args:
-            ownerName (str): Name of the progress bar owner.
-                This is an additional protection against updating and
-                finishing the progress bar with other functions.
+            depth (int): Subtasks nesting level. Using a depth of 0,
+                changes to the progressbar will only be available
+                to the owner's function. Defaults to 1.
         '''
-        self._progressbarOwner = ownerName
+        self._progressbarOwner = (self._get_caller_name(2), depth)
         self.renderingProcess = multiprocessing.Process(
             target=ProgressBar(40).start_rendering_mp,
             args=(self.prefix, self.counter, self.unit, self.finished)
         )
+
+    def _check_owner_permission(self) -> bool:
+        '''
+        Checks if the caller can perform an action
+        according to the depth of subtasks set by the owner
+        
+        With doas we get privileges only on the running command
+        doas start.sh --> subtask.sh (permission denied)
+
+        Sudo gives access to all subtasks
+        sudo start.sh -> exploit.sh -> mainer.sh (access granted)
+
+        My solution is a mix of these approaches. For sudo example,
+        by making subtasks depth to 1. We allow exploit.sh to run,
+        but mainer.sh does not
+
+        Returns:
+            bool: Access granted or not
+        '''
+        callstack = self._get_call_stack()
+        
+        try:
+            ownerIndex = callstack.index(self._progressbarOwner[0])
+            depth = self._progressbarOwner[1]
+            callerName = callstack[-4]
+        except ValueError:
+            return False
+        
+        if callerName == callstack[ownerIndex]:
+            return True
+        elif callerName in callstack[ownerIndex+1:ownerIndex+1+depth]:
+            return True
+        
+        return False
 
     def _start_progressbar(self):
         '''
@@ -78,15 +163,11 @@ class ArchiveFile():
         '''
         self.renderingProcess.start()
 
-    def _update_progressbar(self, callerName: str):
+    def _update_progressbar(self):
         '''
         Increment progressbar counter if needed
-
-        Args:
-            callerName (str): Caller name, compared
-                with progress bar owner's name
         '''
-        if self._progressbarOwner != callerName:
+        if not self._check_owner_permission():
             return
 
         if self.progressbar and self.counter.value != -1:
@@ -102,15 +183,11 @@ class ArchiveFile():
         self.unit.value = b"files"
         self.finished.value = False
 
-    def _finish_progressbar(self, callerName: str):
+    def _finish_progressbar(self):
         '''
         Finish progressbar
-
-        Args:
-            callerName (str): Caller name, compared
-                with progress bar owner's name
         '''
-        if self._progressbarOwner != callerName:
+        if not self._check_owner_permission():
             return
 
         if self.progressbar and self.renderingProcess.is_alive():
@@ -317,11 +394,11 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 self.prefix.value = f"Removing \"{self.arcname}\" : ".encode()
             self.counter.value = -1
             self.unit.value = b""
-            self._create_progressbar("__exit__")
+            self._create_progressbar(0)
             self._start_progressbar()
 
         os.remove(self.filename)
-        self._finish_progressbar("__exit__")
+        self._finish_progressbar()
 
     def _RealGetContents(self):
         '''
@@ -568,16 +645,16 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             if not member.endswith("/"):
                 self.counter.value = -1
                 self.unit.value = b""
-            self._create_progressbar("extract")
+            self._create_progressbar(2)
             self._start_progressbar()
 
-        targetpath = self._extract_member(member, path, pwd, "extract")
+        targetpath = self._extract_member(member, path, pwd)
         #  extract directory contents
         if targetpath != path and os.path.isdir(targetpath):
             members = [name for name in self.namelist() if member in name][1:]
             self.extractall(path, members)
 
-        self._finish_progressbar("extract")
+        self._finish_progressbar()
 
         return targetpath
 
@@ -591,7 +668,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         if self.progressbar and not self.renderingProcess.is_alive():
             if self.useBarPrefix:
                 self.prefix.value = f"Extracting \"{self.arcname}\" : ".encode()
-            self._create_progressbar("extractall")
+            self._create_progressbar(1)
             self._start_progressbar()
 
         if members is None:
@@ -610,14 +687,14 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                     continue
                 else:
                     skip = ""
-            targetpath = self._extract_member(zipinfo, path, pwd, "extractall")
+            targetpath = self._extract_member(zipinfo, path, pwd)
             #  name was found in ignore, add path to skip
             if targetpath == path:
                 skip = zipinfo
 
-        self._finish_progressbar("extractall")
+        self._finish_progressbar()
 
-    def _extract_member(self, member, targetpath, pwd, callerName="") -> str:
+    def _extract_member(self, member, targetpath, pwd) -> str:
         '''
         Extract the ZipInfo object 'member' to a physical
         file on the path targetpath.
@@ -698,7 +775,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                 open(targetpath, "wb") as target:
                 shutil.copyfileobj(source, target)
 
-        self._update_progressbar(callerName)
+        self._update_progressbar()
 
         return targetpath
 
@@ -728,14 +805,14 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             if os.path.isfile(filename):
                 self.counter.value = -1
                 self.unit.value = b""
-            self._create_progressbar("write")
+            self._create_progressbar(1)
             self._start_progressbar()
 
-        self._write(filename, arcname, compress_type, compresslevel)
+        self._write_member(filename, arcname, compress_type, compresslevel)
 
-        self._finish_progressbar("write")
+        self._finish_progressbar()
 
-    def _write(self, filename, arcname, compress_type=None, compresslevel=None):
+    def _write_member(self, filename, arcname, compress_type=None, compresslevel=None):
         '''
         Real zipfile.write, recursive
         '''
@@ -806,14 +883,14 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
                         arcname, symlink, compress_type, compresslevel
                     )
 
-            self._update_progressbar("write")
+            self._update_progressbar()
 
         else:
             if create:
                 super().write(filename, arcname, compress_type, compresslevel)
 
             for file in sorted(os.listdir(filename)):
-                self._write(
+                self._write_member(
                     filename=os.path.join(filename, file),
                     arcname=os.path.join(arcname, file),
                     compress_type=compress_type,
@@ -868,7 +945,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
             if not member.is_dir():
                 self.counter.value = -1
                 self.unit.value = b""
-            self._create_progressbar("remove")
+            self._create_progressbar(1)
             self._start_progressbar()
 
         removed = True
@@ -908,7 +985,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         else:
             removed &= self._remove_member(member, pwd)
 
-        self._finish_progressbar("remove")
+        self._finish_progressbar()
         return removed
 
     def _remove_member(
@@ -983,7 +1060,7 @@ class ZipFile(zipfile.ZipFile, ArchiveFile):
         fp.seek(self.start_dir)
 
         if not member.is_dir():
-            self._update_progressbar("remove")
+            self._update_progressbar()
 
         return True
 
