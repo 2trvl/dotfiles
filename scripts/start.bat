@@ -1,24 +1,71 @@
+: #   ______   ______  ______   ______  ______       ______   ______   ______ 
+: #  /\  ___\ /\__  _\/\  __ \ /\  == \/\__  _\     /\  == \ /\  __ \ /\__  _\
+: #  \ \___  \\/_/\ \/\ \  __ \\ \  __<\/_/\ \/  __ \ \  __< \ \  __ \\/_/\ \/
+: #   \/\_____\  \ \_\ \ \_\ \_\\ \_\ \_\ \ \_\ /\_\ \ \_____\\ \_\ \_\  \ \_\
+: #    \/_____/   \/_/  \/_/\/_/ \/_/ /_/  \/_/ \/_/  \/_____/ \/_/\/_/   \/_/
+: #
 : # Cross-platform way to run python in virtual environment
 : #
 : # Just use it like this:
 : # start.bat archiver.py args
 : # Or any other python script in the folder
 : #
+: # ------------------------------ Features ----------------------------------
+: #
+: # Creates a virtual environment based on requirements.txt, which is located
+: # in the same folder
+: #
 : # Loads environment variables from .env file if it exists
 : #
-: # Requests administrator rights if needed, Polkit is used in Linux
-: # VBScript in Windows and AppleScript in OS X
-: # Python interpreter has only two standard codes 0 and 1
-: # But you can set the exit code manually with sys.exit
-: # Use code 126 to have start.bat restart script with admin rights
+: # You can add script selector __main__.py which will write the script name
+: # to /tmp/getscript.tmp. Then it will be possible to run start.bat without
+: # arguments
+: #
+: # Requests administrator rights if needed, Polkit is used in Linux, VBScript
+: # in Windows and AppleScript in OS X. Python interpreter has only two
+: # standard codes 0 and 1. But you can set the exit code manually with
+: # sys.exit. Use code 126 to have start.bat restart script with admin rights.
 : # Example "except PermissionError: sys.exit(126)"
 : #
-: # For syntax see:
-: # https://stackoverflow.com/q/17510688
+: # It is also possible to upgrade requirements with:
+: # start.bat --upgrade
+: #
+: # -------------------------- Syntax reference ------------------------------
+: #
+: # Colon in batch means label declaration, in POSIX shell it is equivalent to
+: # true. A feature of COMMAND.COM is that it skips labels that it cannot
+: # jump to. Label becomes unusable if it contains special characters. Thus,
+: # inside a batch script, you can add a shell line with ":;". Cross-platform
+: # comment is added using ":;#" or ": #". The space or semicolon are
+: # necessary because sh considers # to be part of a command name if it is not
+: # the first character of an identifier.
+: #
+: # For batch code blocks, heredocs can be used. This redirection mechanism is
+: # for passing multiple lines of input to a command or to comment out code.
+: # Once again use the colon trick to ignore this line in batch. Put the
+: # delimiting identifier in quotes so shell does not interpret its contents.
+: # Identifier is also an unused batch label for closing line to be ignored.
+: # In this way shell treats batch code as an unused string, and cmd
+: # executes it.
+: #
+: # DOS uses carriage return and line feed "\r\n" as a line ending, which Unix
+: # uses just line feed "\n". So in order for script to run you may need to
+: # convert end of line sequences with dos2unix or a text editor. Although on
+: # Windows 10 start.bat runs without error with unix-style line endings.
 
 :<<"::Batch"
     @echo off
     setlocal EnableDelayedExpansion
+
+    for /f "tokens=2 delims=:" %%i in ('chcp') do (
+        set codepage=%%i
+        if "!codepage:~-1!"=="." (
+            set codepage=!codepage:~1,-1!
+        ) else (
+            set codepage=!codepage:~1!
+        )
+    )
+    chcp 65001 > nul
 
     set filepath=%~dp0
 
@@ -88,7 +135,7 @@
             python "%filepath%%~1" !args!
             if errorlevel==126 (
                 echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
-                echo UAC.ShellExecute "cmd.exe", "/k cd /d ""%cd%"" & cls & ""%~s0"" %*", "", "runas", 1 >> "%temp%\getadmin.vbs"
+                echo UAC.ShellExecute "cmd.exe", "/k cd /d ""%cd%"" & cls & ""%~s0"" ""%~1"" !args!", "", "runas", 1 >> "%temp%\getadmin.vbs"
                 "%temp%\getadmin.vbs"
                 del "%temp%\getadmin.vbs"
             )
@@ -96,6 +143,7 @@
     )
 
     :exit
+    chcp %codepage% > nul
     deactivate
     endlocal
     exit /b

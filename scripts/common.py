@@ -6,8 +6,12 @@ Copyright (c) 2022 Andrew Shteren
 --------------------------------------------
             Scripts Common Parts            
 --------------------------------------------
-Code that cannot be attributed to anything
-in particular and is used in several scripts
+My task is to make the scripts as
+independent as possible. Therefore, these
+parts are used in places that imply presence
+of other scripts. If this cannot be
+guaranteed, the functions have counterparts
+inside the script
 
 '''
 import os

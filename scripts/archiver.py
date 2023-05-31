@@ -81,6 +81,9 @@ class ArchiveFile():
         Alternative to calling get_caller_name() with
         different depth values
 
+        Parses not the whole stack, but within the module
+        or until it finds the owner function
+
         Returns:
             list[str]: Caller names, chronologically ordered
         '''
@@ -89,7 +92,7 @@ class ArchiveFile():
 
         while True:
             callstack.insert(0, frame.f_back.f_code.co_name)
-            if callstack[0] == "<module>":
+            if callstack[0] in (self._progressbarOwner[0], "<module>"):
                 break
             frame = frame.f_back
         

@@ -52,10 +52,10 @@ if __name__ == "__main__":
     script = scripts[script]
     
     if len(sys.argv) != 1:
-        with open(sys.argv[1], "w") as temp:
+        with open(sys.argv[1], "w", encoding="utf-8") as temp:
             temp.write(script)
     else:
         script = os.path.join(scriptsFolder, script)
-        with open(script) as code:
+        with open(script, encoding="utf-8") as code:
             sys.argv[0] = os.path.basename(script)
             exec(code.read())
