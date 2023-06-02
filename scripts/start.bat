@@ -21,8 +21,8 @@
 : # to /tmp/getscript.tmp. Then it will be possible to run start.bat without
 : # arguments
 : #
-: # Requests administrator rights if needed, Polkit is used in Linux, VBScript
-: # in Windows and AppleScript in OS X. Python interpreter has only two
+: # Requests administrator rights if needed, Powershell is used in Windows,
+: # Polkit in Linux and AppleScript in OS X. Python interpreter has only two
 : # standard codes 0 and 1. But you can set the exit code manually with
 : # sys.exit. Use code 126 to have start.bat restart script with admin rights.
 : # Example "except PermissionError: sys.exit(126)"
@@ -53,18 +53,11 @@
 : # convert end of line sequences with dos2unix or a text editor. Although on
 : # Windows 10 start.bat runs without error with unix-style line endings.
 
-:<<"::Batch"
+:<<"::Main"
     @echo off
     setlocal EnableDelayedExpansion
 
-    for /f "tokens=2 delims=:" %%i in ('chcp') do (
-        set codepage=%%i
-        if "!codepage:~-1!"=="." (
-            set codepage=!codepage:~1,-1!
-        ) else (
-            set codepage=!codepage:~1!
-        )
-    )
+    call :determine_codepage codepage
     chcp 65001 > nul
 
     set filepath=%~dp0
@@ -105,7 +98,7 @@
             if /i "%~1"=="--help" (
                 goto help
             )
-            goto script-not-found
+            goto script_not_found
 
             :upgrade
             python -m pip install --upgrade pip
@@ -113,20 +106,20 @@
             goto exit
 
             :help
-            echo|set /p dumb="Usage: start.bat [script [arguments..]] [-u | -h]" & echo:
-            echo:
-            echo:Python Virtual Environment Utility
-            echo:
-            echo|set /p dumb="Positional arguments:" & echo:
-            echo:script           script path in the utility folder
-            echo:arguments        arguments of the script to run
-            echo:
-            echo|set /p dumb="Utility options (used when not running scripts):" & echo:
-            echo:-u, --upgrade    update outdated dependencies
-            echo:-h, --help       show this help message and exit
+            echo | set /p dummy="Usage: start.bat [script [arguments..]] [-u | -h]" & echo;
+            echo;
+            echo;Python Virtual Environment Utility
+            echo;
+            echo | set /p dummy="Positional arguments:" & echo;
+            echo;script           script path in the utility folder
+            echo;arguments        arguments of the script to run
+            echo;
+            echo | set /p dummy="Utility options (used when not running scripts):" & echo;
+            echo;-u, --upgrade    update outdated dependencies
+            echo;-h, --help       show this help message and exit
             goto exit
             
-            :script-not-found
+            :script_not_found
             echo No script named "%1"
             goto exit
         ) else (
@@ -134,20 +127,62 @@
             call set args=%%args:*%1=%%
             python "%filepath%%~1" !args!
             if errorlevel==126 (
-                echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
-                echo UAC.ShellExecute "cmd.exe", "/k cd /d ""%cd%"" & cls & ""%~s0"" ""%~1"" !args!", "", "runas", 1 >> "%temp%\getadmin.vbs"
-                "%temp%\getadmin.vbs"
-                del "%temp%\getadmin.vbs"
+                call :write_bom_bytes "%temp%\getadmin.ps1"
+                echo Start-Process cmd -ArgumentList "/k cd /d `"%cd%`" & cls &",'"%~s0" "%~1" !args!' -Verb RunAs >> "%temp%\getadmin.ps1"
+                start /min /wait powershell -NoProfile -WindowStyle hidden -ExecutionPolicy bypass -File "%temp%\getadmin.ps1"
+                del "%temp%\getadmin.ps1"
             )
         )
     )
 
     :exit
-    chcp %codepage% > nul
+    chcp !codepage! > nul
     deactivate
     endlocal
     exit /b
-::Batch
+::Main
+
+:<<"::Functions"
+    :determine_codepage  rtnVar
+    :: Determine current codepage, works in different languages
+    for /f "tokens=2 delims=:" %%i in ('chcp') do (
+        set dummy=%%i
+        if "!dummy:~-1!"=="." (
+            set %~1=!dummy:~1,-1!
+        ) else (
+            set %~1=!dummy:~1!
+        )
+    )
+    exit /b
+
+    :hexprint  string  [rtnVar]
+    :: Based on built-in forfiles ability to include special characters
+    :: in the command line, using hexadecimal code. Allows to generate a
+    :: printable character for any byte code value except 0x00 (nul),
+    :: 0x0A (newline), and 0x0D (carriage return)
+    for /f tokens^=*^ delims^=^ eol^= %%i in (
+        'forfiles /c "cmd /c echo;%~1"'
+    ) do (
+        if "%~2"=="" (
+            echo;%%i
+        ) else (
+            set %~2=%%i
+        )
+    )
+    exit /b
+
+    :write_bom_bytes  filename
+    :: Create file with UTF-8 BOM
+    :: Because powershell doesn't read unicode without it
+    call :determine_codepage CP
+    chcp 437 > nul
+    call :hexprint "0xEF" EF
+    call :hexprint "0xBB" BB
+    call :hexprint "0xBF" BF
+    echo | set /p dummy="%EF%%BB%%BF%" > "%~1"
+    chcp !CP! > nul
+    exit /b
+::Functions
 
 filepath=$(cd -- $(dirname "$0") >/dev/null 2>&1; pwd -P)
 
