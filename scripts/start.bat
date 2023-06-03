@@ -161,7 +161,7 @@
     :: printable character for any byte code value except 0x00 (nul),
     :: 0x0A (newline), and 0x0D (carriage return)
     for /f tokens^=*^ delims^=^ eol^= %%i in (
-        'forfiles /c "cmd /c echo;%~1"'
+        'forfiles /p "%~dp0." /m "%~nx0" /c "cmd /c echo;%~1"'
     ) do (
         if "%~2"=="" (
             echo;%%i
